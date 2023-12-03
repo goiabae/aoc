@@ -1,0 +1,7 @@
+#!/usr/bin/env nu
+use std assert
+let out = (lua main.lua | lines)
+assert ($out.0 == "8")
+assert ($out.1 == "2286")
+assert ($out.2 == "2169")
+assert ($out.3 == "60948")
