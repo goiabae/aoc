@@ -218,3 +218,20 @@ function find_char(c, str)
 	end
 	return nil
 end
+
+function split_on_spaces(str)
+	local acc = List()
+	local i = 1
+	while i < #str + 1 do
+		if is_digit(str:sub(i, i)) then
+			local k = 0
+			while is_digit(str:sub(i+k, i+k)) do
+				k = k + 1
+			end
+			table.insert(acc, str:sub(i, i+k))
+			i = i + k
+		end
+		i = i + 1
+	end
+	return acc
+end
