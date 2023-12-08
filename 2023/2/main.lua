@@ -59,6 +59,7 @@ end
 local function plus(x, y)
 	return x + y
 end
+require("aoc")
 
 local cubes = {
 	red = 12,
@@ -140,8 +141,9 @@ local function part2(f)
 	return reduce(plus, powers)
 end
 
-print(part1("./ex1"))
-print(part2("./ex2"))
-
-print(part1("./input"))
-print(part2("./input"))
+test({
+	{ func = part1, input = "./example",   output = 8 },
+	{ func = part1, input = "./input", output = 2169 },
+	{ func = part2, input = "./example",   output = 2286 },
+	{ func = part2, input = "./input", output = 60948 }
+})
