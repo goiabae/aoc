@@ -1,3 +1,5 @@
+require("aoc")
+
 local function digit_prefix(str)
 	for n = 0, 9 do
 		if tostring(n) == str:sub(1, 1) then
@@ -80,10 +82,10 @@ local function part2(f)
 	return acc
 end
 
-print("Examples:")
-print(part1("./ex1"))
-print(part2("./ex2"))
 
-print("Answers:")
-print(part1("./input"))
-print(part2("./input"))
+test({
+	{ func = part1, input = "./ex1",   output = 142 },
+	{ func = part2, input = "./ex2",   output = 281 },
+	{ func = part1, input = "./input", output = 54634 },
+	{ func = part2, input = "./input", output = 53855 }
+})
