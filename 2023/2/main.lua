@@ -1,64 +1,3 @@
-local function map_seq(f, xs)
-	local acc = {}
-	for i = 1, #xs do
-		table.insert(acc, f(xs[i]))
-	end
-	return acc
-end
-
-local function map_it(f, it)
-	local acc = {}
-	while true do
-		local v = it()
-		if v then
-			table.insert(acc, f(v))
-		else
-			break
-		end
-	end
-	return acc
-end
-
-local function reduce(f, xs)
-	local acc = xs[1]
-	for i = 2, #xs do
-		acc = f(acc, xs[i])
-	end
-	return acc
-end
-
-local function iter(it)
-	local acc = {}
-	while true do
-		local v = it()
-		if v then
-			table.insert(acc, v)
-		end
-	end
-	return acc
-end
-
-local function filter_seq(pred, xs)
-	local acc = {}
-	for i = 1, #xs do
-		if pred(xs[i]) then
-			table.insert(acc, xs[i])
-		end
-	end
-	return acc
-end
-
-local function max(x, y)
-	if x > y then return x else return y end
-end
-
-local function id(x)
-	return x
-end
-
-local function plus(x, y)
-	return x + y
-end
 require("aoc")
 
 local cubes = {
@@ -81,7 +20,7 @@ local function find_char(c, str)
 end
 
 local function parse(str)
-	str = str:sub(6, #str) -- skip "Game " prefix
+	str = str:sub(#"Game "+ 1, #str)
 	local id = str:sub(1, find_char(":", str) - 1)
 	str = str:sub(1 + 2 + #id, #str) -- skip ": " prefix
 
@@ -118,27 +57,22 @@ local function parse(str)
 	return { id = tonumber(id), cubes = game }
 end
 
-local function get(col, xs)
-	local acc = {}
-	for i = 1, #xs do
-		table.insert(acc, xs[i][col])
-	end
-	return acc
-end
-
 local function part1(f)
-	local lines = map_it(id, io.lines(f))
-	local games = map_seq(parse, lines)
-	local valid = filter_seq(is_valid, games)
-	return reduce(function(acc, x) return acc + x end, get("id", valid))
+	return List
+		.from_iter(io.lines(f))
+		:map(parse)
+		:filter(is_valid)
+		:get("id")
+		:reduce(function(acc, x) return acc + x end)
 end
 
 local function part2(f)
-	local lines = map_it(id, io.lines(f))
-	local games = map_seq(parse, lines)
-	local colors = get("cubes", games)
-	local powers = map_seq(function(g) return g.red * g.blue * g.green end, colors)
-	return reduce(plus, powers)
+	return List
+		.from_iter(io.lines(f))
+		:map(parse)
+		:get("cubes")
+		:map(function(g) return g.red * g.blue * g.green end)
+		:reduce(plus)
 end
 
 test({
