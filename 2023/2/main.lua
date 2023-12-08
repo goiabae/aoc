@@ -10,15 +10,6 @@ local function is_valid(game)
 	return (game.cubes.red <= cubes.red) and (game.cubes.blue <= cubes.blue) and (game.cubes.green <= cubes.green)
 end
 
-local function find_char(c, str)
-	for i = 1, #str do
-		if str:sub(i, i) == c then
-			return i
-		end
-	end
-	return nil
-end
-
 local function parse(str)
 	str = str:sub(#"Game "+ 1, #str)
 	local id = str:sub(1, find_char(":", str) - 1)

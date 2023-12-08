@@ -1,14 +1,5 @@
 require("aoc")
 
-local function find_char(c, str)
-	for i = 1, #str do
-		if str:sub(i, i) == c then
-			return i
-		end
-	end
-	return nil
-end
-
 local function split_on_spaces(str)
 	local acc = List()
 	local i = 1

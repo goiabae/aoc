@@ -209,3 +209,12 @@ function new(meta)
 end
 
 setmetatable(List, { __call = new })
+
+function find_char(c, str)
+	for i = 1, #str do
+		if str:sub(i, i) == c then
+			return i
+		end
+	end
+	return nil
+end
