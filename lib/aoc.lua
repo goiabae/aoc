@@ -80,6 +80,10 @@ function max(x, y)
 	if x > y then return x else return y end
 end
 
+function min(x, y)
+	if x < y then return x else return y end
+end
+
 function is_digit(char)
 	return char == "0"
 		or char == "1"
@@ -111,7 +115,7 @@ function test(tests)
 			local output = test.func(test.input)
 			print("  " .. output)
 			if test.output then
-				assert(test.func(test.input) == test.output)
+				assert(output == test.output)
 			end
 		end,
 		tests
@@ -234,4 +238,12 @@ function split_on_spaces(str)
 		i = i + 1
 	end
 	return acc
+end
+
+function read_file(f)
+	local fd = io.open(f, "r")
+	if not fd then return "" end
+	local txt = fd:read("*a")
+	io.close(fd)
+	return txt
 end
