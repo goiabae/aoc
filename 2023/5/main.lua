@@ -70,6 +70,7 @@ local function part1(f)
 		print(input)
 		print(compiled)
 	end
+	assert(input == compiled)
 
 	local acc = almanac.seeds
 
@@ -81,7 +82,39 @@ local function part1(f)
 	return acc:reduce(min)
 end
 
+-- FIXME brute force approach
+local function part2(f)
+	local input = read_file(f)
+	local almanac = List.from_iter(io.lines(f)):apply(parse)
+	local compiled = compile(almanac)
+
+	if input ~= compiled then
+		print(input)
+		print(compiled)
+	end
+	assert(input == compiled)
+
+	almanac.seeds = almanac.seeds:group(2)
+
+	local min = math.huge
+
+	for range in almanac.seeds:iter() do
+		for num = range[1], range[1] + range[2] - 1 do
+			local acc = num
+			for map in almanac.maps:iter() do
+				acc = convert(acc, map)
+			end
+			if acc < min then
+				min = acc
+			end
+		end
+	end
+
+	return min
+end
+
 test({
 	{ func = part1, input = "example", output = 35 },
-	{ func = part1, input = "input", output = 26273516 }
+	{ func = part1, input = "input", output = 26273516 },
+	{ func = part2, input = "input", output = 34039469 }
 })
