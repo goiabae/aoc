@@ -208,6 +208,30 @@ function new(meta)
 		get = get,
 		each = swap(each)
 	}
+
+	function tab:group(n)
+		local acc = List()
+		local i = 1
+		while i <= #self do
+			local group = {}
+			for j = 0, n-1 do
+				table.insert(group, self[i+j])
+			end
+			table.insert(acc, group)
+			i = i + n
+		end
+		return acc
+	end
+
+	function tab:iter()
+		local i = 1
+		return function()
+			if i > #self then return nil end
+			i = i + 1
+			return self[i-1]
+		end
+	end
+
 	setmetatable(tab, meta)
 	return tab
 end
