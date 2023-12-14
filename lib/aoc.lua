@@ -253,7 +253,7 @@ function split_on_spaces(str)
 	while i < #str + 1 do
 		if is_digit(str:sub(i, i)) then
 			local k = 0
-			while is_digit(str:sub(i+k, i+k)) do
+			while is_digit(str:sub(i+k+1, i+k+1)) do
 				k = k + 1
 			end
 			table.insert(acc, str:sub(i, i+k))
