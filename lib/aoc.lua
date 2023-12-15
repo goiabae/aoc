@@ -271,3 +271,11 @@ function read_file(f)
 	io.close(fd)
 	return txt
 end
+
+function fix2(f, x)
+	return function(y) return f(x, y) end
+end
+
+function fix3(f, x)
+	return function(y, z) return f(x, y, z) end
+end
