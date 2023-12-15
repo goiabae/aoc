@@ -1,5 +1,6 @@
 require("aoc")
 
+-- TODO extract common logic between hand_type and hand_type_joker
 local function hand_type(chars)
 	local hand = {}
 
@@ -155,29 +156,24 @@ local function hand_type_joker(chars)
 	return "high-card"
 end
 
-local types = {
-	["high-card"] =  1,
-	["one-pair"] = 2,
-	["two-pair"] = 3,
-	["three-of-a-kind"] = 4,
-	["full-house"] = 5,
-	["four-of-a-kind"] = 6,
-	["five-of-a-kind"] = 7,
+local types = inverse {
+	"high-card",
+	"one-pair",
+	"two-pair",
+	"three-of-a-kind",
+	"full-house",
+	"four-of-a-kind",
+	"five-of-a-kind"
 }
 
 local function comp_hands(cards, x, y)
-	local xh = split_chars(x.hand)
-	local yh = split_chars(y.hand)
-	local xt = types[x.type]
-	local yt = types[y.type]
-
-	if xt ~= yt then
-		return xt < yt
+	if x.type ~= y.type then
+		return x.type < y.type
 	end
 
-	for i = 1, #xh do
-		if cards[xh[i]] ~= cards[yh[i]] then
-			return cards[xh[i]] < cards[yh[i]]
+	for i = 1, #x.hand do
+		if cards[x.hand[i]] ~= cards[y.hand[i]] then
+			return cards[x.hand[i]] < cards[y.hand[i]]
 		end
 	end
 
@@ -185,66 +181,29 @@ local function comp_hands(cards, x, y)
 end
 
 local function solve(f, typer, order)
-	local hands = List
+	return List
 		.from_iter(io.lines(f))
 		:map(split_on_spaces)
-		:map(
-			function (x)
-				return {
-					hand = x[1],
-					type = typer(split_chars(x[1])),
-					bid = tonumber(x[2])
-				}
-			end
-		)
-
-	table.sort(hands, order)
-
-	local total = 0
-	for i = 1, #hands do
-		total = total +  i * hands[i].bid
-	end
-	return total
+		:map(function (x) return { hand = split_chars(x[1]), type = types[typer(split_chars(x[1]))], bid = tonumber(x[2]) } end)
+		:sort(fix3(comp_hands, inverse(order)))
+		:foldi(0, function(acc, x, i) return acc + i*x.bid end)
 end
 
-local comp_hands_joker = fix3(comp_hands, {
-	["J"] = 1,
-	["2"] = 2,
-	["3"] = 3,
-	["4"] = 4,
-	["5"] = 5,
-	["6"] = 6,
-	["7"] = 7,
-	["8"] = 8,
-	["9"] = 9,
-	["T"] = 10,
-	["Q"] = 11,
-	["K"] = 12,
-	["A"] = 13,
-})
+local part1 = function(f)
+	return solve(f, hand_type, {
+		"2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"
+	})
+end
 
-local comp_hands_norm = fix3(comp_hands, {
-	["2"] = 1,
-	["3"] = 2,
-	["4"] = 3,
-	["5"] = 4,
-	["6"] = 5,
-	["7"] = 6,
-	["8"] = 7,
-	["9"] = 8,
-	["T"] = 9,
-	["J"] = 10,
-	["Q"] = 11,
-	["K"] = 12,
-	["A"] = 13,
-})
-
-local part1 = function(f) return solve(f, hand_type, comp_hands_norm) end
-local part2 = function(f) return solve(f, hand_type_joker, comp_hands_joker) end
+local part2 = function(f)
+	return solve(f, hand_type_joker, {
+		"J", "2", "3", "4", "5", "6", "7", "8", "9", "T", "Q", "K", "A"
+	})
+end
 
 test({
-		{ func = part1, input = "example", output = 6440 },
-		{ func = part1, input = "input", output = 248217452 },
-		{ func = part2, input = "example", output = 5905 },
-		{ func = part2, input = "input", outupt = 245576185 }
+	{ func = part1, input = "example", output = 6440 },
+	{ func = part1, input = "input", output = 248217452 },
+	{ func = part2, input = "example", output = 5905 },
+	{ func = part2, input = "input", outupt = 245576185 }
 })
