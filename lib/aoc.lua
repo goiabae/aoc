@@ -232,6 +232,20 @@ function new(meta)
 		end
 	end
 
+	function tab:sort(comparator)
+		table.sort(self, comparator)
+		return self
+	end
+
+	function tab:foldi(initial, f)
+		local acc = initial
+		for i = 1, #self do
+			acc = f(acc, self[i], i)
+		end
+		return acc
+	end
+
+
 	setmetatable(tab, meta)
 	return tab
 end
@@ -278,4 +292,12 @@ end
 
 function fix3(f, x)
 	return function(y, z) return f(x, y, z) end
+end
+
+function inverse(xs)
+	local ys = {}
+	for i = 1, #xs do
+		ys[xs[i]] = i
+	end
+	return ys
 end
