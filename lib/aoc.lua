@@ -137,6 +137,10 @@ function log_or(x, y)
 	return x or y
 end
 
+function log_and(x, y)
+	return x and y
+end
+
 function compose(f, g)
 	return function(x) return g(f(x)) end
 end
@@ -300,4 +304,8 @@ function inverse(xs)
 		ys[xs[i]] = i
 	end
 	return ys
+end
+
+function sleep(t)
+  os.execute("sleep " .. t)
 end
