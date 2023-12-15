@@ -65,7 +65,7 @@ function id(x)
 end
 
 function split_chars(str)
-	local acc = {}
+	local acc = List()
 	for i = 1, #str do
 		table.insert(acc, str:sub(i, i))
 	end
