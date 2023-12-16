@@ -76,6 +76,10 @@ function plus(x, y)
 	return x + y
 end
 
+function sub(x, y)
+	return x - y
+end
+
 function max(x, y)
 	if x > y then return x else return y end
 end
@@ -308,4 +312,23 @@ end
 
 function sleep(t)
   os.execute("sleep " .. t)
+end
+
+function call2(f)
+	return function(args)
+		return f(args[1], args[2])
+	end
+end
+
+
+local function print_seq(seq)
+	print(seq:reduce(function(acc, it) return acc .. " " .. it end))
+end
+
+local function slide_map(seq, n, f)
+	local acc = List()
+	for i = 1, #seq - n + 1 do
+		table.insert(acc, f(slice(seq, i, i + n - 1)))
+	end
+	return acc
 end
