@@ -321,11 +321,11 @@ function call2(f)
 end
 
 
-local function print_seq(seq)
+function print_seq(seq)
 	print(seq:reduce(function(acc, it) return acc .. " " .. it end))
 end
 
-local function slide_map(seq, n, f)
+function slide_map(seq, n, f)
 	local acc = List()
 	for i = 1, #seq - n + 1 do
 		table.insert(acc, f(slice(seq, i, i + n - 1)))
