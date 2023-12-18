@@ -224,7 +224,7 @@ function new(meta)
 		end,
 		slice = slice,
 		get = get,
-		each = swap(each)
+		each = swap(each),
 	}
 
 	function tab:group(n)
@@ -263,6 +263,13 @@ function new(meta)
 		return acc
 	end
 
+	function tab:mapi(f)
+		local acc = List()
+		for i = 1, #self do
+			table.insert(acc, f(self[i], i))
+		end
+		return acc
+	end
 
 	setmetatable(tab, meta)
 	return tab
@@ -341,4 +348,49 @@ function slide_map(seq, n, f)
 		table.insert(acc, f(slice(seq, i, i + n - 1)))
 	end
 	return acc
+end
+
+function ring_map(seq, n, f)
+	local acc = List()
+	for i = 1, #seq do
+		table.insert(acc, f(slice(seq, i, i + n - 1)))
+	end
+	return acc
+end
+
+function cycle(seq)
+	local acc = List.from_list(seq)
+	local last = acc[#acc]
+	table.remove(acc, #acc)
+	table.insert(acc, 1, last)
+	return acc
+end
+
+function filter_mask(seq, mask)
+	assert(#seq == #mask)
+	local acc = List()
+	for i = 1, #seq do
+		if mask[i] then
+			table.insert(acc, seq[i])
+		end
+	end
+	return acc
+end
+
+function vec2_eq(v, w) return v[1] == w[1] and v[2] == w[2] end
+
+function zip_with(f, xs, ys)
+	local zs = List()
+	assert(#xs == #ys)
+	for i = 1, #xs do
+		table.insert(zs, f(xs[i], ys[i]))
+	end
+	return zs
+end
+
+function belongs_to(it, set, eq)
+	for i = 1, #set do
+		if eq(it, set[i]) then return true end
+	end
+	return false
 end
