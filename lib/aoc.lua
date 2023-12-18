@@ -103,8 +103,18 @@ end
 
 function slice(seq, from , to)
 	local acc = List()
-	for i = from, to do
-		table.insert(acc, seq[i])
+	if to > #seq then to = to % #seq end
+	if to < from then
+		for i = from, #seq do
+			table.insert(acc, seq[i])
+		end
+		for i = 1, to do
+			table.insert(acc, seq[i])
+		end
+	else
+		for i = from, to do
+			table.insert(acc, seq[i])
+		end
 	end
 	return acc
 end
