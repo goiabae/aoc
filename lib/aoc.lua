@@ -271,6 +271,16 @@ function new(meta)
 		return acc
 	end
 
+	function tab:pairs()
+		local acc = List()
+		for i = 1, #self - 1 do
+			for j = i+1, #self do
+				table.insert(acc, { self[i], self[j] })
+			end
+		end
+		return acc
+	end
+
 	setmetatable(tab, meta)
 	return tab
 end
