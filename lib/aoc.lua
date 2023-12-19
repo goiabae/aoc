@@ -404,3 +404,7 @@ function belongs_to(it, set, eq)
 	end
 	return false
 end
+
+function eq(x, y)
+	return x == y
+end
