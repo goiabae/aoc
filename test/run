@@ -19,6 +19,21 @@ day() {
 	fi
 }
 
+help() {
+	echo "Usage:"
+	echo "  $0            run tests for every day of every year"
+	echo "  $0 year       run tests for every day of <year>"
+	echo "  $0 year day   run tests for the nth <day> of <year>"
+}
+
+while getopts "h" opt; do
+	case "$opt" in
+		h) help; return 0 ;;
+	esac
+done
+
+shift $((OPTIND - 1))
+
 if test "$#" = 1; then
 	year "${1}"
 	return $?
