@@ -54,10 +54,9 @@ def part1(data):
 def part2(data):
     return sum(score(*hand_part2(*row.split(" "))) for row in data)
 
-def get_data(filepath="input.txt"):
+def get_data(filepath="input"):
     return open(filepath, "r").read().splitlines()
 
 if __name__ == "__main__":
     print(part1(get_data()))
     print(part2(get_data()))
-
