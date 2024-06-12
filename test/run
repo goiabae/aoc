@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 base=$(pwd)
+lib="${base}/lib"
 
 year() {
 	year="${1}"
@@ -13,10 +14,18 @@ day() {
 	year="${1}"
 	day="${2}"
 	! test -d "${base}/${year}/${day}" && return 1
+	pushd "${base}/${year}/${day}" 1> /dev/null
 	echo "Day ${day} of ${year}"
-	if test -f "${base}/${year}/${day}/main.lua"; then
-		"${base}/test/run-lua.sh" "${base}/${year}/${day}" || return 1
+	if ! test -f input; then
+		aoc download -I -d $day -y $year
 	fi
+	for f in main.* a.* b.*; do
+		name=${f%.*}
+		ext=${f##*.}
+		if [ "$ext" = "*" ]; then continue; fi
+		"${base}/test/run-${ext}.sh" . "$name" "$lib" || return 1
+	done
+	popd 1> /dev/null
 }
 
 help() {
@@ -25,6 +34,16 @@ help() {
 	echo "  $0 year       run tests for every day of <year>"
 	echo "  $0 year day   run tests for the nth <day> of <year>"
 }
+
+if ! command -v aoc 1> /dev/null; then
+	echo aoc cli not found
+	exit 1
+fi
+
+if ! [ -v ADVENT_OF_CODE_SESSION ]; then
+	echo ADVENT_OF_CODE_SESSION is not set
+	exit 1
+fi
 
 while getopts "h" opt; do
 	case "$opt" in

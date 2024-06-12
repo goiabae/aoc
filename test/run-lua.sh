@@ -1,6 +1,11 @@
 #!/bin/sh
-base=$(pwd)
+
 cd "${1}"
-LUA_CMD=lua
-which luajit > /dev/null && LUA_CMD=luajit
-LUA_PATH="${base}/lib/?.lua" exec $LUA_CMD "${1}/main.lua"
+
+if command -v luajit 2> /dev/null; then
+	LUA_CMD=luajit
+else
+	LUA_CMD=lua
+fi
+
+LUA_PATH="${3}/?.lua" $LUA_CMD "${1}/${2}.lua"
