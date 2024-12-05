@@ -1,5 +1,44 @@
 local aoc = {}
 
+-- equivalent of sum(mapi(seq, f))
+-- does not accumulate an intermediary list
+function aoc.sumi(seq, f)
+	local total = 0
+	for i = 1, #seq do
+		total = total + f(seq[i], i)
+	end
+	return total
+end
+
+-- keys are elements, values are the frequencies of each key in seq
+-- if the key was not in seq, frequency is 0
+function aoc.make_bag(seq)
+	local bag = {}
+	local meta = { __index = function() return 0 end }
+	setmetatable(bag, meta)
+
+	for elt in aoc.iter(seq) do
+		if bag[elt] == nil then
+			bag[elt] = 1
+		else
+			bag[elt] = bag[elt] + 1
+		end
+	end
+	return bag
+end
+
+function aoc.transpose(rows)
+	local res = {}
+	for i = 1, #(rows[1]) do
+		table.insert(res, {})
+		for j = 1, #rows do
+			table.insert(res[i], rows[j][i])
+		end
+	end
+	return res
+end
+
+
 --@param seq any[]
 --@param f function
 --@return any[]
