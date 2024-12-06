@@ -1,5 +1,23 @@
 local aoc = {}
 
+-- filter unique elements of seq
+--@param seq any[]
+--@param eq function
+--@return any[]
+function aoc.unique(seq, eq)
+	local res = {}
+	for j = 1, #seq do
+		for i = 1, #res do
+			if eq(seq[j], res[i]) then
+				goto continue
+			end
+		end
+		table.insert(res, seq[j])
+		::continue::
+	end
+	return res
+end
+
 -- equivalent of sum(mapi(seq, f))
 -- does not accumulate an intermediary list
 function aoc.sumi(seq, f)
@@ -100,6 +118,14 @@ end
 --@return integer[][]
 function aoc.parse_number_mat(str, row_sep, col_sep)
 	return aoc.map(aoc.split_with(str, row_sep), function (c) return aoc.map(aoc.split_with(c, col_sep), tonumber) end)
+end
+
+--@param str string
+--@param row_sep string
+--@param col_sep string
+--@return integer[][]
+function aoc.parse_char_mat(str)
+	return aoc.map(aoc.split_with(str, "\n"), function (c) return aoc.split_chars(c) end)
 end
 
 --@param seq any[]
