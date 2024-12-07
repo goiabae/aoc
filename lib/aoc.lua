@@ -1,5 +1,9 @@
 local aoc = {}
 
+function aoc.fdiv(x, y)
+	return (x - (x % y)) / y
+end
+
 -- filter unique elements of seq
 --@param seq any[]
 --@param eq function
@@ -172,6 +176,10 @@ end
 
 function aoc.add(x, y)
 	return x + y
+end
+
+function aoc.mul(x, y)
+	return x * y
 end
 
 function aoc.sub(x, y)
