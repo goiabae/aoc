@@ -357,6 +357,8 @@ function aoc.split_with(str, sep)
 	return tokens
 end
 
+---@param f string
+---@return string
 function aoc.read_file(f)
 	local fd = io.open(f, "r")
 	if not fd then return "" end
@@ -515,6 +517,14 @@ function aoc.globalize()
 	for k, v in pairs(aoc) do
 		_G[k] = v
 	end
+end
+
+function aoc.is_even(n)
+	return n % 2 == 0
+end
+
+function aoc.cut_half(str)
+	return string.sub(str, 1, #str / 2), string.sub(str, #str / 2 + 1, #str)
 end
 
 return aoc
