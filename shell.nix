@@ -1,12 +1,16 @@
-{ pkgs ? import <nixpkgs-unstable> {} }:
+{ pkgs ? import <nixpkgs> {} }:
 with pkgs; mkShell {
   packages = [
     aoc-cli
     lua
     luajit
-    sumneko-lua-language-server
+    lua-language-server
     stylua
   ];
 
   hardeningDisable = [ "fortify" ];
+
+  shellHook = ''
+    export LUA_PATH="$LUA_PATH;/home/goiabae/source/aoc/lib/?.lua"
+  '';
 }
