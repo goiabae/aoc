@@ -527,4 +527,20 @@ function aoc.cut_half(str)
 	return string.sub(str, 1, #str / 2), string.sub(str, #str / 2 + 1, #str)
 end
 
+
+function aoc.assert_eq(actual, value)
+	if actual ~= value then
+		print(actual)
+	end
+	assert(actual == value)
+end
+
+function aoc.digits(str)
+	local ds = {}
+	for i = 1, #str do
+		table.insert(ds, tonumber(string.sub(str, i, i)))
+	end
+	return ds
+end
+
 return aoc
