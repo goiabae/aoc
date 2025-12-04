@@ -1,5 +1,9 @@
 local aoc = {}
 
+aoc.list = {}
+
+---@alias iterator<T> fun (): T
+
 function aoc.fdiv(x, y)
 	return (x - (x % y)) / y
 end
@@ -116,10 +120,10 @@ function aoc.split_empty(str)
 	return tokens
 end
 
---@param str string
---@param row_sep string
---@param col_sep string
---@return integer[][]
+---@param str string
+---@param row_sep string
+---@param col_sep string
+---@return integer[][]
 function aoc.parse_number_mat(str, row_sep, col_sep)
 	return aoc.map(aoc.split_with(str, row_sep), function (c) return aoc.map(aoc.split_with(c, col_sep), tonumber) end)
 end
@@ -129,7 +133,7 @@ end
 --@param col_sep string
 --@return integer[][]
 function aoc.parse_char_mat(str)
-	return aoc.map(aoc.split_with(str, "\n"), function (c) return aoc.split_chars(c) end)
+	return aoc.list.map(aoc.split_with(str, "\n"), function (c) return aoc.split_chars(c) end)
 end
 
 --@param seq any[]
@@ -149,6 +153,9 @@ function aoc.sum(seq)
 end
 
 -- collect an iterator into a list
+---@generic T
+---@param it iterator<T>
+---@return T[]
 function aoc.collect(it)
 	local acc = {}
 	while true do
@@ -166,6 +173,8 @@ function aoc.id(x)
 	return x
 end
 
+---@param str string
+---@return string[]
 function aoc.split_chars(str)
 	local acc = {}
 	for i = 1, #str do
@@ -367,6 +376,10 @@ function aoc.read_file(f)
 	return txt
 end
 
+---@generic T, U
+---@param f fun (x: T, ...): U
+---@param x T
+---@return fun (...): U
 function aoc.fix(f, x)
 	return function(...)
 		return f(x, ...)
@@ -436,7 +449,12 @@ end
 
 function aoc.vec2_eq(v, w) return v[1] == w[1] and v[2] == w[2] end
 
-function aoc.zip_with(f, xs, ys)
+---@generic X, Y, Z
+---@param f fun (x: X, y: Y): Z
+---@param xs X[]
+---@param ys Y[]
+---@return Z[]
+function aoc.list.zip_with(f, xs, ys)
 	local zs = {}
 	assert(#xs == #ys)
 	for i = 1, #xs do
@@ -446,9 +464,14 @@ function aoc.zip_with(f, xs, ys)
 end
 
 -- whether it is contained in set
-function aoc.belongs_to(it, set, eq)
+---@generic T
+---@param elt T
+---@param set T[]
+---@param eq fun (x: T, y: T): boolean
+---@return boolean
+function aoc.list.belongs_to(elt, set, eq)
 	for i = 1, #set do
-		if eq(it, set[i]) then return true end
+		if eq(elt, set[i]) then return true end
 	end
 	return false
 end
@@ -457,9 +480,12 @@ function aoc.eq(x, y)
 	return x == y
 end
 
---@param from integer
---@param to integer
-function aoc.slice(seq, from , to)
+---@generic T
+---@param seq T[]
+---@param from integer
+---@param to integer
+---@return T[]
+function aoc.list.slice(seq, from , to)
 	local acc = {}
 	if to > #seq then to = to % #seq end
 	if to < from then
@@ -477,15 +503,20 @@ function aoc.slice(seq, from , to)
 	return acc
 end
 
---@param f function
-function aoc.each(seq, f)
+---@generic T
+---@param seq T[]
+---@param f fun (x: T): nil
+function aoc.list.each(seq, f)
 	for i = 1, #seq do
 		f(seq[i])
 	end
 end
 
---@param f function
-function aoc.reduce(seq, f)
+---@generic T
+---@param seq T[]
+---@param f fun (acc: T, x: T): T
+---@return T
+function aoc.list.reduce(seq, f)
 	local acc = seq[1]
 	for i = 2, #seq do
 		acc = f(acc, seq[i])
@@ -493,8 +524,11 @@ function aoc.reduce(seq, f)
 	return acc
 end
 
---@param f function
-function aoc.map(seq, f)
+---@generic T, U
+---@param seq T[]
+---@param f fun (x: T): U
+---@return U[]
+function aoc.list.map(seq, f)
 	local acc = {}
 	for i = 1, #seq do
 		table.insert(acc, f(seq[i]))
@@ -502,8 +536,11 @@ function aoc.map(seq, f)
 	return acc
 end
 
---@param pred function
-function aoc.filter(seq, pred)
+---@generic T
+---@param seq T[]
+---@param pred fun (x: T): boolean
+---@return T[]
+function aoc.list.filter(seq, pred)
 	local acc = {}
 	for i = 1, #seq do
 		if pred(seq[i]) then
@@ -513,20 +550,70 @@ function aoc.filter(seq, pred)
 	return acc
 end
 
-function aoc.globalize()
-	for k, v in pairs(aoc) do
-		_G[k] = v
-	end
-end
-
 function aoc.is_even(n)
 	return n % 2 == 0
 end
 
+-- returns two strings, each representing one half of str. if str's length is odd, it fails
+---@param str string
+---@return string, string
 function aoc.cut_half(str)
+	assert(aoc.is_even(#str))
 	return string.sub(str, 1, #str / 2), string.sub(str, #str / 2 + 1, #str)
 end
 
+---@generic T
+---@param xs T[]
+---@param elt T
+---@return T[][]
+function aoc.cut_right_on(xs, elt)
+	local rss = {}
+	for i = 1, #xs do
+		if i < #xs and xs[i] == elt then
+			local rs = aoc.slice(xs, i+1, #xs)
+			if #rs > 0 then
+				table.insert(rss, rs)
+			end
+		end
+	end
+	return rss
+end
+
+---@generic T
+---@param xs T[]
+---@return T?
+function aoc.max_of(xs)
+	if #xs == 0 then
+		return nil
+	end
+	local max = xs[1]
+	for i = 2, #xs do
+		if xs[i] > max then
+			max = xs[i]
+		end
+	end
+	return max
+end
+
+---@param cs string[]
+---@return string
+function aoc.join(cs)
+	local s = ""
+	for i = 1, #cs do
+		s = s .. cs[i]
+	end
+	return s
+end
+
+---@param cs string[]
+---@return integer
+function aoc.int_of_char_list(cs)
+	local n = 0
+	for i = 1, #cs do
+		n = n*10 + cs[i]
+	end
+	return n
+end
 
 function aoc.assert_eq(actual, value)
 	if actual ~= value then
@@ -535,12 +622,57 @@ function aoc.assert_eq(actual, value)
 	assert(actual == value)
 end
 
+---@param str string
+---@return integer[]
 function aoc.digits(str)
 	local ds = {}
 	for i = 1, #str do
 		table.insert(ds, tonumber(string.sub(str, i, i)))
 	end
 	return ds
+end
+
+aoc.iter = {}
+
+---@generic T, U
+---@param it iterator<T>
+---@param f fun (x: T): U
+---@return iterator<U>
+function aoc.iter.map(it, f)
+	return function ()
+		local v = it()
+		if v == nil then
+			return nil
+		else
+			return f(v)
+		end
+	end
+end
+
+---@param it iterator<integer>
+---@return integer
+function aoc.iter.sum(it)
+	local acc = 0
+	for v in it do
+		acc = acc + v
+	end
+	return acc
+end
+
+---@generic T
+---@param mat T[][]
+---@param i integer
+---@param j integer
+---@param elt T
+---@return integer
+function aoc.count_adjacent(mat, i, j, elt)
+	local function f (x, y)
+		return (mat[x] and mat[x][y] or nil) == elt and 1 or 0
+	end
+
+	return f(i-1, j-1) + f(i-1, j) + f(i-1, j+1)
+		+ f(i, j-1) + 0 + f(i, j+1)
+		+ f(i+1, j-1) + f(i+1, j) + f(i+1, j+1)
 end
 
 return aoc
