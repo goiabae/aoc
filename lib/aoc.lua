@@ -131,7 +131,7 @@ end
 ---@param col_sep string
 ---@return integer[][]
 function aoc.parse_number_mat(str, row_sep, col_sep)
-	return aoc.map(aoc.split_with(str, row_sep), function (c) return aoc.map(aoc.split_with(c, col_sep), tonumber) end)
+	return aoc.list.map(aoc.split_with(str, row_sep), function (c) return aoc.list.map(aoc.split_with(c, col_sep), tonumber) end)
 end
 
 --@param str string
@@ -428,7 +428,7 @@ function aoc.call2(f)
 end
 
 function aoc.print_seq(seq)
-	print(aoc.reduce(seq, function(acc, it) return acc .. " " .. it end))
+	print(aoc.list.reduce(seq, function(acc, it) return acc .. " " .. it end))
 end
 
 -- apply f to each window of seq of length n and collect the results
