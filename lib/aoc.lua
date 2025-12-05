@@ -748,6 +748,19 @@ function aoc.iter.sum(it)
 end
 
 ---@generic T
+---@param it iterator<T>
+---@param f fun (x: T): integer, integer
+---@return integer, integer
+function aoc.iter.unzip2_sum(it, f)
+	local s1, s2 = 0, 0
+	for v in it do
+		local v1, v2 = f(v)
+		s1, s2 = s1 + v1, s2 + v2
+	end
+	return s1, s2
+end
+
+---@generic T
 ---@param mat T[][]
 ---@param i integer
 ---@param j integer
