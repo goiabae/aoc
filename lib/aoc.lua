@@ -680,4 +680,87 @@ function aoc.count_adjacent(mat, i, j, elt)
 		+ f(i+1, j-1) + f(i+1, j) + f(i+1, j+1)
 end
 
+
+local range_set = {}
+aoc.range_set = range_set
+
+function range_set.make()
+	return nil
+end
+
+-- returns the total amount of elements in the set
+---@param set table?
+---@return integer
+function range_set.count_elts(set)
+	if set == nil then
+		return 0
+	else
+		return range_set.count_elts(set.left) + (set.high - set.low + 1) + range_set.count_elts(set.right)
+	end
+end
+
+---@param set table?
+---@param r [integer, integer]
+---@return table
+function range_set.insert(set, r)
+	if set == nil then
+		return {
+			low = r[1],
+			high = r[2],
+			left = nil,
+			right = nil,
+		}
+	end
+
+	local bb = aoc.cmp(r[1], set.low)
+	local ee = aoc.cmp(r[2], set.high)
+	local eb = aoc.cmp(r[2], set.low)
+	local be = aoc.cmp(r[1], set.high)
+
+	-- Range bigger than set
+	if be > 0 or (ee == 1 and bb >= 0) then
+		local nr = { math.max(set.high+1, r[1]), r[2] }
+		set.right = range_set.insert(set.right, nr)
+
+	-- Range smaller than set
+	elseif eb < 0 or (bb == -1 and ee <= 0) then
+		local nr = { r[1], math.min(set.low-1, r[2]) }
+		set.left = range_set.insert(set.left, nr)
+
+	-- Parts smaller and bigger than set
+	elseif bb == -1 and ee == 1 then
+		local nr1 = { r[1], set.low-1 }
+		local nr2 = { set.high+1, r[2] }
+		set.left = range_set.insert(set.left, nr1)
+		set.right = range_set.insert(set.right, nr2)
+
+		-- Range fully contained in set
+	elseif (bb >= 0 and ee <= 0) then
+		do end
+	end
+
+	return set
+end
+
+function range_set.contains(set, n)
+	if set == nil then return false end
+	if n >= set.low and n <= set.high then
+		return true
+	end
+	if n < set.low then
+		return range_set.contains(set.left, n)
+	end
+	if n > set.high then
+		return range_set.contains(set.right, n)
+	end
+	return false
+end
+
+function range_set.from_range_list(rs)
+	local set = aoc.range_set.make()
+	for r in aoc.list.iter(rs) do
+		set = aoc.range_set.insert(set, r)
+	end
+	return set
+end
 return aoc
