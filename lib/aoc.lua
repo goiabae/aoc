@@ -801,6 +801,30 @@ end
 
 function aoc.less_than(a, b) return a < b end
 
+function aoc.transpose_view(mat)
+	-- The outer proxy (columns)
+	return setmetatable({}, {
+			__len = function ()
+				return #mat > 0 and (#(mat[1])) or 0
+			end,
+			__index = function(_, col)
+				-- For each "column", return a row-proxy
+				return setmetatable({}, {
+						__len = function ()
+							return #mat
+						end,
+						__index = function(_, row)
+							return mat[row][col]
+						end,
+
+						__newindex = function(_, row, value)
+							mat[row][col] = value
+						end
+				})
+			end
+	})
+end
+
 function aoc.cmp(a, b)
 	if a < b then return -1 elseif a > b then return 1 else return 0 end
 end
