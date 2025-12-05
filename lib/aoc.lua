@@ -48,7 +48,7 @@ function aoc.make_bag(seq)
 	local meta = { __index = function() return 0 end }
 	setmetatable(bag, meta)
 
-	for elt in aoc.iter(seq) do
+	for elt in aoc.list.iter(seq) do
 		if bag[elt] == nil then
 			bag[elt] = 1
 		else
@@ -75,7 +75,7 @@ end
 --@return any[]
 function aoc.filter_map(seq, f)
 	local res = {}
-	for elt in aoc.iter(seq) do
+	for elt in aoc.list.iter(seq) do
 		local mapped = f(elt)
 		if mapped ~= nil then
 			table.insert(res, mapped)
@@ -88,7 +88,7 @@ end
 --@param pred function
 --@return boolean
 function aoc.for_all(seq, pred)
-	for elt in aoc.iter(seq) do
+	for elt in aoc.list.iter(seq) do
 		if not pred(elt) then
 			return false
 		end
@@ -100,7 +100,7 @@ end
 --@param pred function
 --@return boolean
 function aoc.exists(seq, pred)
-	for elt in aoc.iter(seq) do
+	for elt in aoc.list.iter(seq) do
 		if pred(elt) then
 			return true
 		end
@@ -151,7 +151,7 @@ end
 --@return integer
 function aoc.sum(seq)
 	local total = 0
-	for num in aoc.iter(seq) do
+	for num in aoc.list.iter(seq) do
 		total = total + num
 	end
 	return total
@@ -293,7 +293,7 @@ function aoc.group(seq, n)
 	return acc
 end
 
-function aoc.iter(seq)
+function aoc.list.iter(seq)
 	local i = 1
 	return function()
 		if i > #seq then return nil end
