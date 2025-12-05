@@ -320,8 +320,6 @@ function aoc.list.iter(seq)
 	end
 end
 
-function aoc.sort(seq, comparator)
-	table.sort(seq, comparator)
 function aoc.matrix_iter(mat)
 	return coroutine.wrap(function ()
 		for i, row in ipairs(mat) do
@@ -332,7 +330,53 @@ function aoc.matrix_iter(mat)
 	end)
 end
 
+local function is_custom_iterable(v)
+	if type(v) ~= "table" then return false end
+	local mt = getmetatable(v)
+	return mt and mt.__index and mt.__len
+end
+
+---@generic T
+---@param seq T[]
+---@param cmp fun (x: T, y: T): boolean
+---@return T[]
+function aoc.sort(seq, cmp)
+	cmp = cmp or aoc.less_than
+	if is_custom_iterable(seq) then
+		aoc.quick_sort(seq, cmp, 1, #seq)
+	else
+		table.sort(seq, cmp)
+	end
 	return seq
+end
+
+function aoc.quick_sort(seq, cmp, init, final)
+	local i, j, pivot
+	i = init
+	j = final
+	local k = math.floor((init + final) / 2)
+	pivot = seq[k]
+	while i <= j do
+		while seq[i] < pivot do
+			i = i + 1
+		end
+		while seq[j] > pivot do
+			j = j - 1
+		end
+		if i <= j then
+			local aux = seq[i]
+			seq[i] = seq[j]
+			seq[j] = aux
+			i = i + 1
+			j = j - 1
+		end
+	end
+	if init < j then
+		aoc.quick_sort(seq, cmp, init, j)
+	end
+	if init < final then
+		aoc.quick_sort(seq, cmp, i, final)
+	end
 end
 
 function aoc.foldi(seq, initial, f)
