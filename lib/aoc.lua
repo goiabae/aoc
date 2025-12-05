@@ -26,12 +26,17 @@ function aoc.unique(seq, eq)
 	return res
 end
 
--- equivalent of sum(mapi(seq, f))
--- does not accumulate an intermediary list
-function aoc.sumi(seq, f)
+---@generic T
+---@param seq T[]
+---@param f fun (i: integer, x: T): integer
+---@return integer
+function aoc.list.sum(seq, f)
 	local total = 0
 	for i = 1, #seq do
-		total = total + f(seq[i], i)
+		total = total + f(i, seq[i])
+	end
+	return total
+end
 	end
 	return total
 end
