@@ -38,6 +38,17 @@ function aoc.list.sum(seq, f)
 	end
 	return total
 end
+
+---@generic T
+---@param seq T[]
+---@param pred fun (i: integer, x: T): boolean
+---@return integer
+function aoc.list.count(seq, pred)
+	local total = 0
+	for i = 1, #seq do
+		if pred(i, seq[i]) then
+			total = total + 1
+		end
 	end
 	return total
 end
