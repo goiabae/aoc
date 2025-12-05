@@ -23,11 +23,13 @@ local function is_invalid(str)
 	return false
 end
 
----@param filename string
----@return integer
-local function part1(filename)
-	local invalid = 0
+---@type solver
+local function solve (filename)
 	local mat = aoc.parse_number_mat(aoc.read_file(filename), ",", "-")
+
+	local invalid = 0
+	local invalid2 = 0
+
 	for _, r in pairs(mat) do
 		for i = r[1], r[2] do
 			local s = tostring(i)
@@ -37,29 +39,14 @@ local function part1(filename)
 					invalid = invalid + i
 				end
 			end
-		end
-	end
-	return invalid
-end
-
----@param filename string
----@return integer
-local function part2(filename)
-	local invalid = 0
-	local mat = aoc.parse_number_mat(aoc.read_file(filename), ",", "-")
-	for _, r in pairs(mat) do
-		for i = r[1], r[2] do
-			local s = tostring(i)
 			if is_invalid(s) then
-				invalid = invalid + i
+				invalid2 = invalid2 + i
 			end
 		end
 	end
-	return invalid
+
+	return invalid, invalid2
 end
 
-assert(part1("example") == 1227775554)
-assert(part1("input") == 13919717792)
-
-assert(part2("example") == 4174379265)
-assert(part2("input") == 14582313461)
+aoc.verify(solve, "example", 1227775554, 4174379265)
+aoc.verify(solve, "input", 13919717792, 14582313461)
