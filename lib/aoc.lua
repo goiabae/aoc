@@ -3,6 +3,7 @@ local aoc = {}
 aoc.list = {}
 
 ---@alias iterator<T> fun (): T
+---@alias iterator3<T, U, V> fun (): T, U, V
 
 function aoc.fdiv(x, y)
 	return (x - (x % y)) / y
@@ -167,6 +168,23 @@ function aoc.collect(it)
 		local v = it()
 		if v then
 			table.insert(acc, v)
+		else
+			break
+		end
+	end
+	return acc
+end
+
+-- collect an iterator into a list
+---@generic T, U, V
+---@param it iterator3<T, U, V>
+---@return [T, U, V][]
+function aoc.collect3(it)
+	local acc = {}
+	while true do
+		local v1, v2, v3 = it()
+		if v1 and v2 and v3 then
+			table.insert(acc, { v1, v2, v3 })
 		else
 			break
 		end
@@ -678,6 +696,28 @@ function aoc.count_adjacent(mat, i, j, elt)
 	return f(i-1, j-1) + f(i-1, j) + f(i-1, j+1)
 		+ f(i, j-1) + 0 + f(i, j+1)
 		+ f(i+1, j-1) + f(i+1, j) + f(i+1, j+1)
+end
+
+function aoc.iter.filter3(it, pred)
+	local function f ()
+		local v1, v2, v3 = it()
+		if v1 and v2 and v3 then
+			if pred(v1, v2, v3) then
+				return v1, v2, v3
+			else
+				return f()
+			end
+		end
+	end
+	return f
+end
+
+function aoc.iter.count(it)
+	local s = 0
+	for _ in it do
+		s = s + 1
+	end
+	return s
 end
 
 
