@@ -1,5 +1,6 @@
 local aoc = require("aoc")
 
+---@type solver
 local function solve (filename)
 	local sections = aoc.split_empty(aoc.read_file(filename))
 	local ingredient_ids = aoc.list.map(aoc.split_with(sections[2], "\n"), tonumber)
