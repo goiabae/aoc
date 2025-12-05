@@ -911,4 +911,17 @@ function range_set.from_range_list(rs)
 	end
 	return set
 end
+
+function aoc.verify(solver, filename, e1, e2)
+	local p1, p2 = solver(filename)
+	if e1 and p1 ~= e1 then
+		print("Wrong part1 solution.")
+		print(string.format("Expected %d, but got %d", e1, p1))
+	end
+	if e2 and p2 ~= e2 then
+		print("Wrong part2 solution.")
+		print(string.format("Expected %d, but got %d", e2, p2))
+	end
+end
+
 return aoc
