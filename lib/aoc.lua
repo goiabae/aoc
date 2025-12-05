@@ -322,6 +322,16 @@ end
 
 function aoc.sort(seq, comparator)
 	table.sort(seq, comparator)
+function aoc.matrix_iter(mat)
+	return coroutine.wrap(function ()
+		for i, row in ipairs(mat) do
+			for j, v in ipairs(row) do
+				coroutine.yield(i, j, v)
+			end
+		end
+	end)
+end
+
 	return seq
 end
 
