@@ -1,26 +1,20 @@
 local aoc = require("aoc")
 
-local function compare(a, b) return a < b end
+-- FIXME: does not work with LuaJIT
 
-local function part1(filename)
+---@type solver
+local function solve (filename)
 	local mat = aoc.parse_number_mat(aoc.read_file(filename), "\n", " ")
-	local rotated = aoc.transpose(mat)
-	local sorted = aoc.map(rotated, function(seq) return aoc.sort(seq, compare) end)
-	local unrotated = aoc.transpose(sorted)
-	return aoc.sum(aoc.map(unrotated, function(row) return math.abs(row[1] - row[2]) end))
-end
-
-local function part2(filename)
-	local mat = aoc.parse_number_mat(aoc.read_file(filename), "\n", " ")
-	local rotated = aoc.transpose(mat)
-
-	local fst = rotated[1]
-	local freqs = aoc.make_bag(rotated[2])
-
-	return aoc.sumi(fst, function(elt, _)
+	local tmat = aoc.transpose_view(mat)
+	local fst = tmat[1]
+	local freqs = aoc.make_bag(tmat[2])
+	local p2 = aoc.list.sum(fst, function(_, elt)
 		return elt * freqs[elt]
 	end)
+	aoc.list.each(tmat, aoc.sort)
+	local p1 = aoc.list.sum(mat, aoc.snd(aoc.distance))
+	return p1, p2
 end
 
-assert(part1("input") == 2086478, "wrong solution for part1")
-assert(part2("input") == 24941624, "wrong solution for part2")
+aoc.verify(solve, "example", 11, 31)
+aoc.verify(solve, "input", 2086478, 24941624)
