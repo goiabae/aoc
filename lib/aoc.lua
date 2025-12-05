@@ -777,6 +777,10 @@ function aoc.iter.filter3(it, pred)
 	return f
 end
 
+function aoc.equals3(v)
+	return function (_, _, x) return x == v end
+end
+
 function aoc.iter.count(it)
 	local s = 0
 	for _ in it do
@@ -785,6 +789,21 @@ function aoc.iter.count(it)
 	return s
 end
 
+function aoc.distance(p)
+	return math.abs(p[1] - p[2])
+end
+
+function aoc.snd(f)
+	return function (_, v)
+		return f(v)
+	end
+end
+
+function aoc.less_than(a, b) return a < b end
+
+function aoc.cmp(a, b)
+	if a < b then return -1 elseif a > b then return 1 else return 0 end
+end
 
 local range_set = {}
 aoc.range_set = range_set
