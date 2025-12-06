@@ -36,28 +36,16 @@ end
 
 local function in_right_order(ordering, page_nos)
 	for i = 1, #page_nos do
-		local befores = find_befores(ordering, page_nos[i])
-		local afters = find_afters(ordering, page_nos[i])
 
 		-- for every elt in befores/afters, if it exists in page then it appears before/after i
-		local all_befores = function() return aoc.for_all(befores, function(before) return is_before(page_nos, i, before) end) end
-		local all_afters = function() return aoc.for_all(afters, function(after) return is_after(page_nos, i, after) end) end
+		local all_befores = function() return aoc.for_all(find_befores(ordering, page_nos[i]), function(before) return is_before(page_nos, i, before) end) end
+		local all_afters = function() return aoc.for_all(find_afters(ordering, page_nos[i]), function(after) return is_after(page_nos, i, after) end) end
 
 		if (not all_befores()) or (not all_afters()) then
 			return false
 		end
 	end
 	return true
-end
-
-local function part1(filename)
-	local sections = aoc.split_empty(aoc.read_file(filename))
-	local ordering = aoc.parse_number_mat(sections[1], "\n", "|")
-	local to_produce = aoc.parse_number_mat(sections[2], "\n", ",")
-
-	local correct = aoc.filter(to_produce, aoc.fix(in_right_order, ordering))
-	local middles = aoc.map(correct, aoc.middle)
-	return aoc.sum(middles)
 end
 
 -- whether a should come before b or not given an ordering
@@ -71,18 +59,23 @@ local function order(ordering, page_nos)
 	return aoc.sort(page_nos, aoc.fix(compare, ordering))
 end
 
-local function part2(filename)
+---@type solver
+local function solve (filename)
 	local sections = aoc.split_empty(aoc.read_file(filename))
 	local ordering = aoc.parse_number_mat(sections[1], "\n", "|")
 	local to_produce = aoc.parse_number_mat(sections[2], "\n", ",")
 
-	local incorrect = aoc.filter(to_produce, function(page_nos) return not in_right_order(ordering, page_nos) end)
-	local corrected = aoc.map(incorrect, aoc.fix(order, ordering))
-	local middles = aoc.map(corrected, aoc.middle)
-	return aoc.sum(middles)
+	local correct = aoc.list.filter(to_produce, aoc.fix(in_right_order, ordering))
+	local middles = aoc.list.map(correct, aoc.middle)
+	local p1 = aoc.sum(middles)
+
+	local incorrect = aoc.list.filter(to_produce, function(page_nos) return not in_right_order(ordering, page_nos) end)
+	local corrected = aoc.list.map(incorrect, aoc.fix(order, ordering))
+	local middles = aoc.list.map(corrected, aoc.middle)
+	local p2 = aoc.sum(middles)
+
+	return p1, p2
 end
 
-assert(part1("example") == 143, "wrong solution for part1 example")
-assert(part1("input") == 5639, "wrong solution for part1")
-assert(part2("example") == 123, "wrong solution for part2 example")
-assert(part2("input") == 5273, "wrong solution for part2")
+aoc.verify(solve, "example", 143, 123)
+aoc.verify(solve, "input", 5639, 5273)
