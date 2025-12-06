@@ -153,6 +153,14 @@ function aoc.parse_char_mat(str)
 	return aoc.list.map(aoc.split_with(str, "\n"), function (c) return aoc.split_chars(c) end)
 end
 
+---@param str string
+---@param row_sep string
+---@param col_sep string
+---@return string[][]
+function aoc.parse_string_mat(str, row_sep, col_sep)
+	return aoc.list.map(aoc.split_with(str, row_sep), function (c) return aoc.split_with(c, col_sep) end)
+end
+
 --@param seq any[]
 function aoc.middle(seq)
 	assert((#seq) % 2 == 1, "length " .. #seq .. " of sequence is not odd")
@@ -1000,6 +1008,22 @@ function aoc.verify(solver, filename, e1, e2)
 		print("Wrong part2 solution.")
 		print(string.format("Expected %d, but got %d", e2, p2))
 		os.exit(1)
+	end
+end
+
+function aoc.pad_left(s, l, _)
+	return string.format("%" .. tostring(l) .. "s", s)
+end
+
+function aoc.pad_right(s, l, _)
+	if l < 100 then
+		local fmt = "%-" .. tostring(l) .. "s"
+		return string.format(fmt, s)
+	else
+		while #s < l do
+			s = s .. " "
+		end
+		return s
 	end
 end
 
