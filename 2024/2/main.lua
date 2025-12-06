@@ -1,10 +1,4 @@
-local function split(str)
-	local tokens = {}
-	for token in string.gmatch(str, "[^%s]+") do
-		table.insert(tokens, token)
-	end
-	return tokens
-end
+local aoc = require("aoc")
 
 local function is_safe(report, skip)
 	local dec = true
@@ -48,13 +42,12 @@ local function tolerating(report)
 	return false
 end
 
-local function solution(pred, filename)
-	local total = 0
-	for line in io.lines(filename) do
-		total = total + (pred(split(line), nil) and 1 or 0)
-	end
-	return total
+---@type solver
+local function solve (filename)
+	return aoc.iter.unzip2_count(io.lines(filename), function (line)
+		local report = aoc.split_on_spaces(line)
+		return is_safe(report, nil), tolerating(report)
+	end)
 end
 
-assert(solution(is_safe, "input") == 421, "wrong answer for part 1")
-assert(solution(tolerating, "input") == 476, "wrong answer for part 1")
+aoc.verify(solve, "input", 421, 476)
