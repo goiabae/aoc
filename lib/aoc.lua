@@ -803,6 +803,25 @@ function aoc.iter.filter3(it, pred)
 	return f
 end
 
+---@generic T, U
+---@param it iterator<T>
+---@param f fun (t: T): U?
+---@return iterator<U>
+function aoc.iter.filter_map(it, f)
+	local function recur ()
+		local v = it()
+		if v then
+			local u = f(v)
+			if u then
+				return u
+			else
+				return recur()
+			end
+		end
+	end
+	return recur
+end
+
 function aoc.equals3(v)
 	return function (_, _, x) return x == v end
 end
@@ -813,6 +832,32 @@ function aoc.iter.count(it)
 		s = s + 1
 	end
 	return s
+end
+
+---@generic T
+---@param it iterator<T>
+---@param pred fun (x: T): boolean
+---@return boolean
+function aoc.iter.for_all(it, pred)
+	for elt in it do
+		if not pred(elt) then
+			return false
+		end
+	end
+	return true
+end
+
+---@generic T
+---@param it iterator<T>
+---@param pred fun (x: T): boolean
+---@return boolean
+function aoc.iter.exists(it, pred)
+	for elt in it do
+		if pred(elt) then
+			return true
+		end
+	end
+	return false
 end
 
 function aoc.distance(p)
