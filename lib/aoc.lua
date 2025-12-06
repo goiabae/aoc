@@ -1027,4 +1027,40 @@ function aoc.pad_right(s, l, _)
 	end
 end
 
+-- Parses a matrix of the sort:
+--
+--   123|45 | 67
+--   89 | 10|  11
+--
+-- with column separator characters.
+--
+---@param filename string
+---@param is_sep fun (c: string): boolean
+---@return string[][]
+function aoc.parse_separated_matrix (filename, is_sep)
+	local lines = aoc.collect(io.lines(filename))
+	local l = aoc.foldi(lines, 0, function (acc, x, _) return math.max(acc, #x) end)
+	local padded_lines = aoc.list.map(lines, function (x) return aoc.pad_right(x, l) end)
+	local rows = aoc.list.map(padded_lines, function () return {} end)
+	local beg = 1
+
+	local function all_spaces (c)
+		return aoc.for_all(padded_lines, function (line) return is_sep(string.sub(line, c, c)) end)
+	end
+
+	local function f (s)
+		for r = 1, #padded_lines do
+			table.insert(rows[r], string.sub(padded_lines[r], beg, math.min(s-1, l)))
+		end
+		beg = s+1
+	end
+
+	for i = 2, l do
+		if all_spaces(i) then f(i) end
+	end
+	f(l+1)
+
+	return rows
+end
+
 return aoc
