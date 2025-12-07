@@ -435,6 +435,19 @@ function aoc.find_char(c, str)
 	return nil
 end
 
+---@generic T
+---@param seq T[]
+---@param elt T
+---@return integer?
+function aoc.list.find(seq, elt)
+	for i = 1, #seq do
+		if seq[i] == elt then
+			return i
+		end
+	end
+	return nil
+end
+
 function aoc.split_on_spaces(str)
 	local acc = {}
 	local i = 1
@@ -500,8 +513,19 @@ function aoc.call2(f)
 	end
 end
 
-function aoc.print_seq(seq)
-	print(aoc.list.reduce(seq, function(acc, it) return acc .. " " .. it end))
+---@generic T
+---@param seq T[]
+---@param printer? fun (x: T): string
+function aoc.print_seq(seq, printer)
+	if printer then
+		print(aoc.list.reduce(aoc.list.map(seq, printer), function(acc, it)
+			return acc .. " " .. it
+		end))
+	else
+		print(aoc.list.reduce(seq, function(acc, it)
+			return acc .. " " .. it
+		end))
+	end
 end
 
 -- apply f to each window of seq of length n and collect the results
@@ -1001,12 +1025,20 @@ function aoc.verify(solver, filename, e1, e2)
 	local p1, p2 = solver(filename)
 	if e1 and p1 ~= e1 then
 		print("Wrong part1 solution.")
-		print(string.format("Expected %d, but got %d", e1, p1))
+		if p1 then
+			print(string.format("Expected %d, but got %d", e1, p1))
+		else
+			print(string.format("Expected %d, but got nil", e1))
+		end
 		os.exit(1)
 	end
 	if e2 and p2 ~= e2 then
 		print("Wrong part2 solution.")
-		print(string.format("Expected %d, but got %d", e2, p2))
+		if p2 then
+			print(string.format("Expected %d, but got %d", e2, p2))
+		else
+			print(string.format("Expected %d, but got nil", e2))
+		end
 		os.exit(1)
 	end
 end
@@ -1061,6 +1093,19 @@ function aoc.parse_separated_matrix (filename, is_sep)
 	f(l+1)
 
 	return rows
+end
+
+-- if elt is a table, elements of the resulting list all alias to the same thing
+---@generic T
+---@param size integer
+---@param elt T
+---@return T
+function aoc.list.init (size, elt)
+	local xs = {}
+	for i = 1, size do
+		xs[i] = elt
+	end
+	return xs
 end
 
 return aoc
