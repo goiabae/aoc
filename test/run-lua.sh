@@ -2,7 +2,7 @@
 
 cd "${1}"
 
-if command -v luajit 2> /dev/null; then
+if command -v luajit > /dev/null 2>&1; then
 	LUA_CMD=luajit
 else
 	LUA_CMD=lua
