@@ -196,6 +196,23 @@ function aoc.collect(it)
 end
 
 -- collect an iterator into a list
+---@generic T, U
+---@param it iterator2<T, U>
+---@return [T, U][]
+function aoc.collect2(it)
+	local acc = {}
+	while true do
+		local v1, v2 = it()
+		if v1 and v2 then
+			table.insert(acc, { v1, v2 })
+		else
+			break
+		end
+	end
+	return acc
+end
+
+-- collect an iterator into a list
 ---@generic T, U, V
 ---@param it iterator3<T, U, V>
 ---@return [T, U, V][]
