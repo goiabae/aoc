@@ -1065,6 +1065,16 @@ function range_set.count_elts(set)
 end
 
 ---@param set table?
+---@return integer
+function range_set.count_nodes(set)
+	if set == nil then
+		return 0
+	else
+		return 1 + range_set.count_elts(set.left) + range_set.count_elts(set.right)
+	end
+end
+
+---@param set table?
 ---@param r [integer, integer]
 ---@return table
 function range_set.insert(set, r)
@@ -1107,6 +1117,265 @@ function range_set.insert(set, r)
 	return set
 end
 
+-- Returns:
+-- - root
+-- - minimun node
+function aoc.range_set.min_node(set, should_remove)
+	if set == nil then return nil, nil end
+
+	if set.left == nil then
+		if should_remove then
+			local right = set.right
+			set.right = nil
+			return right, set
+		else
+			return set, set
+		end
+	else
+		local left, m = aoc.range_set.min_node(set.left, should_remove)
+		set.left = left
+		return set, m
+	end
+end
+
+function aoc.range_set.min(set)
+	local _, node = aoc.range_set.min_node(set, false)
+	return node and node.low
+end
+
+function aoc.range_set.max_node(set, should_remove)
+	if set == nil then return nil, nil end
+
+	if set.right == nil then
+		if should_remove then
+			local left = set.left
+			set.left = nil
+			return left, set
+		else
+			return set, set
+		end
+	else
+		local right, m = aoc.range_set.max_node(set.right, should_remove)
+		set.right = right
+		return set, m
+	end
+end
+
+function aoc.range_set.max(set)
+	local _, node = aoc.range_set.max_node(set, false)
+	return node and node.high
+end
+
+---@param set table?
+---@param transformed [integer, integer][]
+---@param transforms [integer, integer, integer][]
+---@return table?
+local function aux (set, transformed, transforms)
+	if set == nil then return set end
+
+	local function replace_current_node ()
+		if set.left == nil and set.right == nil then
+			return nil
+		elseif set.left == nil then
+			local nright, node = aoc.range_set.min_node(set.right, true)
+			node.right = nright
+			node.left = set.left
+			return node
+		else
+			local nleft, node = aoc.range_set.max_node(set.left, true)
+			node.left = nleft
+			node.right = set.right
+			return node
+		end
+	end
+
+	for k, t in pairs(transforms) do
+		local dst = t[1]
+		local src = t[2]
+		local len = t[3]
+		local d = dst-src
+
+		local r = { src, src+len-1 }
+
+		local bb = aoc.cmp(r[1], set.low)
+		local ee = aoc.cmp(r[2], set.high)
+		local eb = aoc.cmp(r[2], set.low)
+		local be = aoc.cmp(r[1], set.high)
+
+
+		-- [........]
+		--     [----]
+		-- [..][****]
+		-- ^ r1  ^ tr
+		if
+			(bb == 1 and ee == 0 and be == -1 and eb == 1)
+			or (be == 0 and ee == 0 and bb == 1 and eb == 1)
+		then
+			local r1 = { set.low, r[1]-1 }
+			local tr = { r[1]+d, r[2]+d }
+			set.low = r1[1]
+			set.high = r1[2]
+			table.insert(transformed, tr)
+			table.remove(transforms, k)
+			return aux(set, transformed, transforms)
+
+		-- [........]
+		--   [----]
+		-- [][****][]
+		-- ^   ^   ^
+		-- r1  tr  r2
+		elseif bb == 1 and ee == -1 and be == -1 and eb == 1 then
+			local r1 = { set.low, r[1]-1 }
+			local tr = { r[1]+d, r[2]+d }
+			local r2 = { r[2]+1, set.high }
+			set.low = r1[1]
+			set.high = r1[2]
+			table.insert(transformed, r2)
+			table.insert(transformed, tr)
+			table.remove(transforms, k)
+			return aux(set, transformed, transforms)
+
+		--       [.........]
+		-- [---------]
+		-- [----][***][....]
+		-- ^      ^    ^
+		-- t1     rt   r1
+		elseif
+			(bb == -1 and ee == -1 and be == -1 and eb == 1)
+			or (bb == -1 and ee == -1 and be == -1 and eb == 0)
+		then
+			local t1 = { r[1]+d, r[1], (set.low-1)-r[1]+1 }
+			local rt = { set.low+d, r[2]+d }
+			local r1 = { r[2]+1, set.high }
+			set.low = r1[1]
+			set.high = r1[2]
+			table.remove(transforms, k)
+			table.insert(transforms, t1)
+			table.insert(transformed, rt)
+			return aux(set, transformed, transforms)
+
+		-- [..........]
+		-- [------]
+		-- [******][..]
+		-- ^        ^
+		-- tr       r1
+		elseif
+			(bb == 0 and ee == -1 and be == -1 and eb == 1)
+			or (bb == 0 and eb == 0 and be == -1 and ee == -1)
+		then
+			local r1 = { r[2]+1, set.high }
+			local tr = { r[1]+d, r[2]+d }
+			set.low = r1[1]
+			set.high = r1[2]
+			table.insert(transformed, tr)
+			table.remove(transforms, k)
+			return aux(set, transformed, transforms)
+
+		-- [...........]
+		--      [----------]
+		-- [...][******][--]
+		--  ^     ^      ^
+		--  r1    rt     t1
+		elseif
+			(bb == 1 and ee == 1 and be == -1 and eb == 1)
+			or (bb == 1 and ee == 1 and be == 0 and eb == 1)
+		then
+			local r1 = { set.low, r[1]-1 }
+			local tr = { r[1]+d, set.high+d }
+			local t1 = { set.high+1+d, set.high+1, r[2]-(set.high+1)+1 }
+			set.low = r1[1]
+			set.high = r1[2]
+			transforms[k] = t1
+			table.insert(transformed, tr)
+			return aux(set, transformed, transforms)
+
+		--     [..............]
+		-- [----------------------]
+		-- [--][**************][--]
+		-- ^    ^               ^
+		-- t1   tr              t2
+		elseif bb == -1 and ee == 1 and be == -1 and eb == 1 then
+			local t1 = { r[1]+d, r[1], (set.low-1)-r[1]+1 }
+			local tr = { set.low+d, set.high+d }
+			local t2 = { set.high+1+d, set.high+1, r[2]-(set.high+1)+1 }
+			transforms[k] = t1
+			table.insert(transformed, tr)
+			table.insert(transforms, t2)
+			set = replace_current_node()
+			return aux(set, transformed, transforms)
+
+		--         [........]
+		-- [----------------]
+		-- [------][********]
+		--  ^ t1     ^ tr
+		elseif
+			(bb == -1 and ee == 0 and be == -1 and eb == 1)
+			or (bb == -1 and ee == 0 and be == -1 and eb == 0)
+		then
+			local n1 = (set.low-1)-r[1]+1
+			local t1 = { r[1]+d, r[1], n1 }
+			local tr = { set.low+d, set.high+d }
+			transforms[k] = t1
+			table.insert(transformed, tr)
+			set = replace_current_node()
+			return aux(set, transformed, transforms)
+
+		-- [.........]
+		-- [--------------]
+		-- [*********][---]
+		-- ^ tr        ^ t1
+		elseif
+			(bb == 0 and ee == 1 and be == -1 and eb == 1)
+			or (bb == 0 and ee == 1 and be == 0 and eb == 1)
+		then
+			local tr = { set.low+d, set.high+d }
+			local t1 = { set.high+1+d, set.high+1, r[2]-(set.high+1)+1 }
+			transforms[k] = t1
+			table.insert(transformed, tr)
+			set = replace_current_node()
+			return aux(set, transformed, transforms)
+
+		-- [........]
+		-- [--------]
+		-- [********] < tr
+		elseif
+			(bb == 0 and ee == 0 and be == -1 and eb == 1)
+			or (bb == 0 and ee == 0 and be == 0 and eb == 0)
+		then
+			local tr = { set.low+d, set.high+d }
+			table.insert(transformed, tr)
+			table.remove(transforms, k)
+			set = replace_current_node()
+			return aux(set, transformed, transforms)
+
+		-- [.........] [----------]
+		elseif
+			(bb == 1 and ee == 1 and be == 1 and eb == 1)
+			or (bb == -1 and ee == -1 and be == -1 and eb == -1)
+		then do end
+
+		else
+			print(bb, ee, be, eb)
+			assert(false)
+		end
+	end
+
+	set.left = aux(set.left, transformed, transforms)
+	set.right = aux(set.right, transformed, transforms)
+	return set
+end
+
+---@param set table?
+---@param transforms [integer, integer, integer][]
+function range_set.slide_transform(set, transforms)
+	local transformed = {}
+	set = aux(set, transformed, aoc.list.map(transforms, aoc.id))
+	for r in aoc.list.iter(transformed) do
+		set = range_set.insert(set, r)
+	end
+	return set
+end
+
 function range_set.contains(set, n)
 	if set == nil then return false end
 	if n >= set.low and n <= set.high then
@@ -1127,6 +1396,25 @@ function range_set.from_range_list(rs)
 		set = aoc.range_set.insert(set, r)
 	end
 	return set
+end
+
+function range_set.iter (set)
+	return coroutine.wrap(function ()
+		if set == nil then return end
+		local q = {}
+		local cur = set
+		while cur or #q > 0 do
+			while cur do
+				table.insert(q, cur)
+				cur = cur.left
+			end
+
+			cur = table.remove(q)
+			coroutine.yield(cur.low, cur.high)
+
+			cur = cur.right
+		end
+	end)
 end
 
 ---@alias solver fun (filename: string): integer, integer
