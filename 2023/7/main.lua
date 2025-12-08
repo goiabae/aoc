@@ -1,87 +1,41 @@
-require("aoc")
+local aoc = require("aoc")
 
--- TODO extract common logic between hand_type and hand_type_joker
+---@param chars string[]
+---@return string
 local function hand_type(chars)
-	local hand = {}
+	local hand = aoc.make_bag(chars)
 
-	for i = 1, #chars do
-		if hand[chars[i]] == nil then
-			hand[chars[i]] = 1
-		else
-			hand[chars[i]] = hand[chars[i]] + 1
-		end
+	if aoc.map.exists(hand, function (_, count) return count == 5 end) then
+		return "five-of-a-kind"
 	end
 
-	-- five of a kind
-	for _, count in pairs(hand) do
-		if count == 5 then
-			return "five-of-a-kind"
-		end
+	if aoc.map.exists(hand, function (_, count) return count == 4 end) then
+		return "four-of-a-kind"
 	end
 
-	-- four of a kind
-	for _, count in pairs(hand) do
-		if count == 4 then
-			return "four-of-a-kind"
-		end
+	local pair_count = aoc.map.count(hand, function (_, count) return count == 2 end)
+	local three = aoc.map.exists(hand, function (_, count) return count == 3 end)
+	local two = pair_count > 0
+	if two and three then
+		return "full-house"
 	end
 
-	-- full house
-	do
-		local three = false
-		local two = false
-		for _, count in pairs(hand) do
-			if count == 3 then
-				three = true
-				if two then
-					return "full-house"
-				end
-			end
-			if count == 2 then
-				two = true
-				if three then
-					return "full-house"
-				end
-			end
-		end
+	if three then
+		return "three-of-a-kind"
 	end
 
-	-- three of a kind
-	for _, count in pairs(hand) do
-		if count == 3 then
-			return "three-of-a-kind"
-		end
+	if pair_count == 1 then
+		return "one-pair"
+	elseif pair_count == 2 then
+		return "two-pair"
 	end
-
-	-- two pair
-	-- one pair
-	do
-		local pair_count = 0
-		for _, count in pairs(hand) do
-			if count == 2 then
-				pair_count = pair_count + 1
-			end
-		end
-		if pair_count == 1 then
-			return "one-pair"
-		elseif pair_count == 2 then
-			return "two-pair"
-		end
-	end
-
 	return "high-card"
 end
 
+---@param chars string[]
+---@return string
 local function hand_type_joker(chars)
-	local hand = {}
-
-	for i = 1, #chars do
-		if hand[chars[i]] == nil then
-			hand[chars[i]] = 1
-		else
-			hand[chars[i]] = hand[chars[i]] + 1
-		end
-	end
+	local hand = aoc.make_bag(chars)
 
 	local jokers = hand["J"] or 0
 
@@ -90,17 +44,12 @@ local function hand_type_joker(chars)
 	end
 
 	-- five of a kind
-	for card, count in pairs(hand) do
-		if card ~= "J" and (count + jokers) >= 5 then
-			return "five-of-a-kind"
-		end
+	if aoc.map.exists(hand, function (card, count) return card ~= "J" and (count + jokers) >= 5 end) then
+		return "five-of-a-kind"
 	end
 
-	-- four of a kind
-	for card, count in pairs(hand) do
-		if card ~= "J" and (count + jokers) >= 4 then
-			return "four-of-a-kind"
-		end
+	if aoc.map.exists(hand, function (card, count) return card ~= "J" and (count + jokers) >= 4 end) then
+		return "four-of-a-kind"
 	end
 
 	-- full house
@@ -115,34 +64,25 @@ local function hand_type_joker(chars)
 				if two then
 					return "full-house"
 				end
-				goto continue
-			end
-			if card ~= "J" and (count + jokers_left) == 2 then
+			elseif card ~= "J" and (count + jokers_left) == 2 then
 				jokers_left = jokers_left - (2 - count)
 				two = true
 				if three then
 					return "full-house"
 				end
 			end
-			::continue::
 		end
 	end
 
-	-- three of a kind
-	for card, count in pairs(hand) do
-		if card ~= "J" and (count + jokers) >= 3 then
-			return "three-of-a-kind"
-		end
+	if aoc.map.exists(hand, function (card, count) return card ~= "J" and (count + jokers) >= 3 end) then
+		return "three-of-a-kind"
 	end
 
-	-- two pair
-	-- one pair
 	do
-		local jokers_left = jokers
 		local pair_count = 0
 		for card, count in pairs(hand) do
-			if card ~= "J" and (jokers_left + count) >= 2 then
-				jokers_left = jokers_left - (2 - count)
+			if card ~= "J" and (jokers + count) >= 2 then
+				jokers = jokers - (2 - count)
 				pair_count = pair_count + 1
 			end
 		end
@@ -156,7 +96,7 @@ local function hand_type_joker(chars)
 	return "high-card"
 end
 
-local types = inverse {
+local types = aoc.inverse {
 	"high-card",
 	"one-pair",
 	"two-pair",
@@ -180,30 +120,28 @@ local function comp_hands(cards, x, y)
 	return false -- they are equal
 end
 
-local function solve(f, typer, order)
-	return List
-		.from_iter(io.lines(f))
-		:map(split_on_spaces)
-		:map(function (x) return { hand = split_chars(x[1]), type = types[typer(split_chars(x[1]))], bid = tonumber(x[2]) } end)
-		:sort(fix3(comp_hands, inverse(order)))
-		:foldi(0, function(acc, x, i) return acc + i*x.bid end)
+local function solve2(f, typer, order)
+	local function g (x)
+		local cs = aoc.split_chars(x[1])
+		return {
+			hand = cs,
+			type = types[typer(cs)],
+			bid = tonumber(x[2])
+		}
+	end
+	local a = aoc.list.map(aoc.collect(io.lines(f)), function (line) return g(aoc.split_with(line, " ")) end)
+	aoc.sort(a, order)
+	return aoc.foldi(a, 0, function(acc, x, i) return acc + i*x.bid end)
 end
 
-local part1 = function(f)
-	return solve(f, hand_type, {
-		"2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"
-	})
+local o1 = aoc.fix(comp_hands, aoc.inverse({ "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A" }))
+local o2 = aoc.fix(comp_hands, aoc.inverse({ "J", "2", "3", "4", "5", "6", "7", "8", "9", "T", "Q", "K", "A" }))
+
+local function solve (filename)
+	local p1 = solve2(filename, hand_type, o1)
+	local p2 = solve2(filename, hand_type_joker, o2)
+	return p1, p2
 end
 
-local part2 = function(f)
-	return solve(f, hand_type_joker, {
-		"J", "2", "3", "4", "5", "6", "7", "8", "9", "T", "Q", "K", "A"
-	})
-end
-
-test({
-	{ func = part1, input = "example", output = 6440 },
-	{ func = part1, input = "input", output = 248217452 },
-	{ func = part2, input = "example", output = 5905 },
-	{ func = part2, input = "input", outupt = 245576185 }
-})
+aoc.verify(solve, "example", 6440, 5905)
+aoc.verify(solve, "input", 248217452, 245576185)
