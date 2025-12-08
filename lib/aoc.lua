@@ -247,12 +247,22 @@ function aoc.min(x, y)
 end
 
 function aoc.is_digit(char)
-	local code = string.byte(char)
-	return string.byte('0') <= code and code <= string.byte('9')
+	return string.match(char, "%d") ~= nil
 end
 
 function aoc.concat(x, y)
 	return x .. y
+end
+
+function aoc.list.concat(xs, ys)
+	local zs = {}
+	for x in aoc.list.iter(xs) do
+		table.insert(zs, x)
+	end
+	for y in aoc.list.iter(ys) do
+		table.insert(zs, y)
+	end
+	return zs
 end
 
 function aoc.test(tests)
@@ -363,6 +373,11 @@ function aoc.matrix_iter(mat)
 			end
 		end
 	end)
+end
+
+---@param p [integer, integer]
+function aoc.matrix_at (mat, p)
+	return (mat and mat[p[1]] and mat[p[1]][p[2]]) or nil
 end
 
 local function is_custom_iterable(v)
@@ -842,6 +857,38 @@ function aoc.count_adjacent(mat, i, j, elt)
 	return f(i-1, j-1) + f(i-1, j) + f(i-1, j+1)
 		+ f(i, j-1) + 0 + f(i, j+1)
 		+ f(i+1, j-1) + f(i+1, j) + f(i+1, j+1)
+end
+
+---@generic T
+---@param mat T[][]
+---@param i integer
+---@param j integer
+---@param pred fun (x: T): boolean
+---@return boolean
+function aoc.for_all_adjacent(mat, i, j, pred)
+	local function f (x, y)
+		return (mat[x] and mat[x][y] and pred(mat[x][y])) or false
+	end
+
+	return f(i-1, j-1) and f(i-1, j) and f(i-1, j+1)
+		and f(i, j-1) and true and f(i, j+1)
+		and f(i+1, j-1) and f(i+1, j) and f(i+1, j+1)
+end
+
+---@generic T
+---@param mat T[][]
+---@param i integer
+---@param j integer
+---@param pred fun (x: T): boolean
+---@return boolean
+function aoc.exists_adjacent(mat, i, j, pred)
+	local function f (x, y)
+		return (mat[x] and mat[x][y] and pred(mat[x][y])) or false
+	end
+
+	return f(i-1, j-1) or f(i-1, j) or f(i-1, j+1)
+		or f(i, j-1) or false or f(i, j+1)
+		or f(i+1, j-1) or f(i+1, j) or f(i+1, j+1)
 end
 
 function aoc.iter.filter3(it, pred)
