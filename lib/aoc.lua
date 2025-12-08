@@ -858,6 +858,24 @@ function aoc.iter.filter3(it, pred)
 	return f
 end
 
+---@generic T
+---@param it iterator<T>
+---@param pred fun (x: T): boolean
+---@return iterator<T>
+function aoc.iter.filter(it, pred)
+	local function f ()
+		local v = it()
+		if v then
+			if pred(v) then
+				return v
+			else
+				return f()
+			end
+		end
+	end
+	return f
+end
+
 ---@generic T, U
 ---@param it iterator2<T, U>
 ---@param pred fun (t: T, u: U): boolean
@@ -1166,6 +1184,26 @@ function aoc.iter.last (it)
 		end
 		v = w
 	end
+end
+
+function aoc.b2i (x) return x and 1 or 0 end
+
+-- Splits `str` on substring `sep`.
+---@param str string
+---@param sep string
+---@return iterator<string>
+function aoc.split_sub (str, sep)
+	return coroutine.wrap(function ()
+		local pattern = "(.-)" .. sep
+		local last_end = 1
+		local s, e, cap = str:find(pattern, 1)
+		while s do
+			coroutine.yield(cap)
+			last_end = e + 1
+			s, e, cap = str:find(pattern, last_end)
+		end
+		coroutine.yield(str:sub(last_end))
+	end)
 end
 
 return aoc
