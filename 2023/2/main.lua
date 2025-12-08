@@ -1,74 +1,51 @@
-require("aoc")
+local aoc = require("aoc")
 
-local cubes = {
-	red = 12,
-	green = 13,
-	blue = 14,
-}
+---@alias game { id: integer, red: integer, green: integer, blue: integer }
 
+---@param game game
+---@return boolean
 local function is_valid(game)
-	return (game.cubes.red <= cubes.red) and (game.cubes.blue <= cubes.blue) and (game.cubes.green <= cubes.green)
+	return (game.red <= 12)
+		and (game.blue <= 14)
+		and (game.green <= 13)
 end
 
+---@param str string
+---@return game
 local function parse(str)
-	str = str:sub(#"Game "+ 1, #str)
-	local id = str:sub(1, find_char(":", str) - 1)
-	str = str:sub(1 + 2 + #id, #str) -- skip ": " prefix
+	local i = 1
+	i = i + #"Game "
+	local id = str:sub(i, i + aoc.find_char(":", str:sub(i)) - 1 - 1)
+	i = i + #id + #": "
 
-	local game = { red = 0, blue = 0, green = 0 }
+	local red = 0
+	local blue = 0
+	local green = 0
 
-	local function find_delim(str2)
-		local comma = find_char(",", str2)
-		local semicolon = find_char(";", str2)
-		if (not comma) and (not semicolon) then
-			return #str2 + 1
-		end
-		if not comma then return semicolon end
-		if not semicolon then return comma end
-		if comma < semicolon then return comma else return semicolon end
-	end
-
-	while (#str) > 0 do
-		local space = find_char(" ", str)
-		local amount = str:sub(1, space - 1)
-		str = str:sub(1 + #amount + 1, #str)
-		local delim = find_delim(str)
-		local color = str:sub(1, delim - 1)
-		str = str:sub(#color + 1 + 2, #str)
-
-		if color == "red" then
-			game.red = max(game.red, tonumber(amount))
-		elseif color == "green" then
-			game.green = max(game.green, tonumber(amount))
-		elseif color == "blue" then
-			game.blue = max(game.blue, tonumber(amount))
+	for r in aoc.split_sub(str:sub(i), "; ") do
+		for s in aoc.split_sub(r, ", ") do
+			local space = aoc.find_char(" ", s)
+			local amount = tonumber(s:sub(1, space-1))
+			local color = s:sub(space+1)
+			if color == "red" then
+				red = math.max(red, amount)
+			elseif color == "green" then
+				green = math.max(green, amount)
+			elseif color == "blue" then
+				blue = math.max(blue, amount)
+			end
 		end
 	end
 
-	return { id = tonumber(id), cubes = game }
+	return { id = tonumber(id), red = red, green = green, blue = blue }
 end
 
-local function part1(f)
-	return List
-		.from_iter(io.lines(f))
-		:map(parse)
-		:filter(is_valid)
-		:get("id")
-		:reduce(function(acc, x) return acc + x end)
+---@type solver
+local function solve (filename)
+	return aoc.iter.unzip2_sum(aoc.iter.map(io.lines(filename), parse), function (game)
+		return aoc.b2i(is_valid(game)) * game.id, game.red * game.blue * game.green
+	end)
 end
 
-local function part2(f)
-	return List
-		.from_iter(io.lines(f))
-		:map(parse)
-		:get("cubes")
-		:map(function(g) return g.red * g.blue * g.green end)
-		:reduce(plus)
-end
-
-test({
-	{ func = part1, input = "./example",   output = 8 },
-	{ func = part1, input = "./input", output = 2169 },
-	{ func = part2, input = "./example",   output = 2286 },
-	{ func = part2, input = "./input", output = 60948 }
-})
+aoc.verify(solve, "example", 8, 2286)
+aoc.verify(solve, "input", 2169, 60948)
