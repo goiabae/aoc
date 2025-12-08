@@ -9,7 +9,7 @@ local function solve (filename)
 
 	for i = 1, aoc.len(trows) do
 		local col = trows[i]
-		local o = string.sub(col[#col], 1, 1)
+		local o = string.sub(aoc.last(col), 1, 1)
 		local op = (o == "*") and aoc.mul or aoc.add
 		local init = (o == "*") and 1 or 0
 
