@@ -2,7 +2,8 @@ local aoc = {}
 
 aoc.list = {}
 
----@alias iterator<T> fun (): T
+---@alias iterator<T> fun (): T?
+---@alias iterator2<T, U> fun (): T, U
 ---@alias iterator3<T, U, V> fun (): T, U, V
 
 function aoc.fdiv(x, y)
@@ -339,6 +340,21 @@ function aoc.list.iter(seq)
 	end
 end
 
+aoc.map = {}
+
+---@generic K, V
+---@param xm table<K, V>
+---@return iterator2<K, V>
+function aoc.map.iter (xm)
+	local f, t, k = pairs(xm)
+	return function ()
+		k = f(t, k)
+		if k then
+			return k, t[k]
+		end
+	end
+end
+
 function aoc.matrix_iter(mat)
 	return coroutine.wrap(function ()
 		for i, row in ipairs(mat) do
@@ -553,6 +569,13 @@ function aoc.cycle(seq)
 	table.remove(acc, aoc.len(acc))
 	table.insert(acc, 1, last)
 	return acc
+end
+
+---@generic T
+---@param seq T[]
+---@return T?
+function aoc.last(seq)
+	return seq[aoc.len(seq)]
 end
 
 -- filter sequence using a boolean mask
@@ -836,6 +859,19 @@ function aoc.iter.filter3(it, pred)
 end
 
 ---@generic T, U
+---@param it iterator2<T, U>
+---@param pred fun (t: T, u: U): boolean
+---@return T, U
+function aoc.iter.find2(it, pred)
+	for v1, v2 in it do
+		if pred(v1, v2) then
+			return v1, v2
+		end
+	end
+	return nil, nil
+end
+
+---@generic T, U
 ---@param it iterator<T>
 ---@param f fun (t: T): U?
 ---@return iterator<U>
@@ -1116,6 +1152,20 @@ function aoc.list.init (size, elt)
 		xs[i] = elt
 	end
 	return xs
+end
+
+---@generic T
+---@param it iterator<T>
+---@return T?
+function aoc.iter.last (it)
+	local v = nil
+	while true do
+		local w = it()
+		if w == nil then
+			return v
+		end
+		v = w
+	end
 end
 
 return aoc
