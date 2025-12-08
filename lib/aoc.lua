@@ -496,12 +496,15 @@ function aoc.split_on_spaces(str)
 	return acc
 end
 
---@param str string
---@param sep string
-function aoc.split_with(str, sep)
+---@generic T
+---@param str string
+---@param sep string
+---@param f? fun (x: string): T
+---@return T
+function aoc.split_with(str, sep, f)
 	local tokens = {}
 	for token in string.gmatch(str, "[^" .. sep .. "]+") do
-		table.insert(tokens, token)
+		table.insert(tokens, f and f(token) or token)
 	end
 	return tokens
 end
