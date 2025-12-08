@@ -382,6 +382,25 @@ function aoc.map.iter (xm)
 	end
 end
 
+function aoc.map.exists (xm, pred)
+	for k, v in pairs(xm) do
+		if pred(k, v) then
+			return true
+		end
+	end
+	return false
+end
+
+function aoc.map.count (xm, pred)
+	local s = 0
+	for k, v in pairs(xm) do
+		if pred(k, v) then
+			s = s + 1
+		end
+	end
+	return s
+end
+
 function aoc.matrix_iter(mat)
 	return coroutine.wrap(function ()
 		for i, row in ipairs(mat) do
