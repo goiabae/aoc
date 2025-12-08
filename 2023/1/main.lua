@@ -1,91 +1,59 @@
-require("aoc")
+local aoc = require("aoc")
 
-local function digit_prefix(str)
-	for n = 0, 9 do
-		if tostring(n) == str:sub(1, 1) then
-			return { num = n, len = 1 }
-		end
-	end
-	return { num = nil, len = 0 }
+local word_patterns = {
+	["^zero"] = "0",
+	["^one"] = "1",
+	["^two"] = "2",
+	["^three"] = "3",
+	["^four"] = "4",
+	["^five"] = "5",
+	["^six"] = "6",
+	["^seven"] = "7",
+	["^eight"] = "8",
+	["^nine"] = "9"
+}
+
+---@param str string
+---@return integer?
+local function find_number_word_prefix(str)
+	local f = function (w, _) return str:match(w) end
+	return aoc.snd(aoc.id)(aoc.iter.find2(aoc.map.iter(word_patterns), f))
 end
 
-local function number_prefix(str)
-	local words = { "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" }
-	for i = 1, 10 do
-		local word = words[i]
-		if word == str:sub(1, #word) then
-			return { num = i - 1, len = #word }
-		end
-	end
-	return { num = nil, len = 0 }
-end
-
-local function digit_chars(line)
-	local acc = { it = {}, len = 0 }
-	for i = 1, #line do
-		local c = line:sub(i, i)
-		local d = digit_prefix(c)
-		if d.len > 0 then
-			table.insert(acc.it, d.num)
-			acc.len = acc.len + 1
-		end
-	end
-	return acc
-end
-
+---@param line string
+---@return iterator<string>
 local function digit_words_and_chars(line)
-	local acc = { it = {}, len = 0 }
-
-	local function aux(str)
-		local word = number_prefix(str)
-		if word.len > 0 then
-			return word
+	local i = 1
+	return function ()
+		while i <= #line do
+			local num = line:match("^%d", i) or find_number_word_prefix(line:sub(i))
+			i = i + (num and #num or 1)
+			if num then
+				return num
+			end
 		end
-		local digit = digit_prefix(str)
-		if digit.len > 0 then
-			return digit
-		end
-		return { num = nil, len = 0 }
+		return nil
 	end
-
-	while true do
-		if #line <= 0 then
-			break
-		end
-		local num = aux(line)
-		line = line:sub(1+1, #line)
-		if num.len > 0 then
-			table.insert(acc.it, num.num)
-			acc.len = acc.len + 1
-		end
-	end
-	return acc
 end
 
-local function part1(f)
-	local acc = 0
-	for line in io.lines(f) do
-		local ns = digit_chars(line)
-		local n = ns.it[1] .. ns.it[ns.len]
-		acc = acc + tonumber(n)
+---@type solver
+local function solve (filename)
+
+	-- I've given myself the liberty of allowing empty sequences (for part1("ex2")
+	-- in particular), but the puzzle only specifies sequences of 1 or more
+	-- elements.
+	---@param it iterator<string>
+	---@return integer
+	local function g (it)
+		local i = it()
+		return i and tonumber(i .. (aoc.iter.last(it) or i)) or 0
 	end
-	return acc
+
+	return aoc.iter.unzip2_sum(io.lines(filename), function (line)
+		return g(string.gmatch(line, "%d")), g(digit_words_and_chars(line))
+	end)
 end
 
-local function part2(f)
-	local acc = 0
-	for line in io.lines(f) do
-		local ns = digit_words_and_chars(line)
-		local n = ns.it[1] .. ns.it[ns.len]
-		acc = acc + tonumber(n)
-	end
-	return acc
-end
-
-
-test({
-	{ func = part1, input = "./ex1",   output = 142 },
-	{ func = part2, input = "./ex2",   output = 281 },
-	{ func = part1, input = "./input", output = 54634 },
-	{ func = part2, input = "./input", output = 53855 }
-})
+aoc.verify(solve, "ex1", 142, 142)
+aoc.verify(solve, "ex2", 209, 281)
+aoc.verify(solve, "input", 54634, 53855)
