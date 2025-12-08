@@ -7,18 +7,18 @@ local function solve (filename)
 
 	local s, s2 = 0, 0
 
-	for i = 1, #trows do
+	for i = 1, aoc.len(trows) do
 		local col = trows[i]
 		local o = string.sub(col[#col], 1, 1)
 		local op = (o == "*") and aoc.mul or aoc.add
 		local init = (o == "*") and 1 or 0
 
-		local p = aoc.foldi(aoc.list.slice(col, 1, #col-1), init, op)
+		local p = aoc.foldi(aoc.list.slice(col, 1, aoc.len(col)-1), init, op)
 
 		local p2 = init
-		for j = 1, #(col[1]) do
+		for j = 1, aoc.len(col[1]) do
 			local n = ""
-			for k = 1, #col-1 do
+			for k = 1, aoc.len(col)-1 do
 				local m = string.sub(col[k], j, j)
 				n = n .. ((m == " ") and "" or m)
 			end

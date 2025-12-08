@@ -15,8 +15,8 @@ end
 --@return any[]
 function aoc.unique(seq, eq)
 	local res = {}
-	for j = 1, #seq do
-		for i = 1, #res do
+	for j = 1, aoc.len(seq) do
+		for i = 1, aoc.len(res) do
 			if eq(seq[j], res[i]) then
 				goto continue
 			end
@@ -33,7 +33,7 @@ end
 ---@return integer
 function aoc.list.sum(seq, f)
 	local total = 0
-	for i = 1, #seq do
+	for i = 1, aoc.len(seq) do
 		total = total + f(i, seq[i])
 	end
 	return total
@@ -45,7 +45,7 @@ end
 ---@return integer
 function aoc.list.count(seq, pred)
 	local total = 0
-	for i = 1, #seq do
+	for i = 1, aoc.len(seq) do
 		if pred(i, seq[i]) then
 			total = total + 1
 		end
@@ -72,9 +72,9 @@ end
 
 function aoc.transpose(rows)
 	local res = {}
-	for i = 1, #(rows[1]) do
+	for i = 1, aoc.len(rows[1]) do
 		table.insert(res, {})
-		for j = 1, #rows do
+		for j = 1, aoc.len(rows) do
 			table.insert(res[i], rows[j][i])
 		end
 	end
@@ -125,7 +125,7 @@ end
 function aoc.split_empty(str)
 	local tokens = {}
 	local token = ""
-	for i = 1, #str do
+	for i = 1, aoc.len(str) do
 		if string.sub(str, i, i) == "\n" and string.sub(str, i+1, i+1) == "\n" then
 			table.insert(tokens, token)
 			token = ""
@@ -163,8 +163,8 @@ end
 
 --@param seq any[]
 function aoc.middle(seq)
-	assert((#seq) % 2 == 1, "length " .. #seq .. " of sequence is not odd")
-	return seq[(#seq + 1) / 2]
+	assert(aoc.len(seq) % 2 == 1, "length " .. aoc.len(seq) .. " of sequence is not odd")
+	return seq[(aoc.len(seq) + 1) / 2]
 end
 
 --@param seq integer[]
@@ -219,7 +219,7 @@ end
 ---@return string[]
 function aoc.split_chars(str)
 	local acc = {}
-	for i = 1, #str do
+	for i = 1, aoc.len(str) do
 		table.insert(acc, str:sub(i, i))
 	end
 	return acc
@@ -272,7 +272,7 @@ end
 --@param idxs table
 function aoc.at(tab, idxs)
 	local acc = tab
-	for i = 1, #idxs do
+	for i = 1, aoc.len(idxs) do
 		acc = acc[idxs[i]]
 		if not acc then
 			break
@@ -296,7 +296,7 @@ end
 
 function aoc.from_list(seq)
 	local list = {}
-	for i = 1, #seq do
+	for i = 1, aoc.len(seq) do
 		table.insert(list, seq[i])
 	end
 	return list
@@ -304,7 +304,7 @@ end
 
 function aoc.get(seq, col)
 	local acc = {}
-	for i = 1, #seq do
+	for i = 1, aoc.len(seq) do
 		table.insert(acc, seq[i][col])
 	end
 	return acc
@@ -319,7 +319,7 @@ end
 function aoc.group(seq, n)
 	local acc = {}
 	local i = 1
-	while i <= #seq do
+	while i <= aoc.len(seq) do
 		local group = {}
 		for j = 0, n-1 do
 			table.insert(group, seq[i+j])
@@ -333,7 +333,7 @@ end
 function aoc.list.iter(seq)
 	local i = 1
 	return function()
-		if i > #seq then return nil end
+		if i > aoc.len(seq) then return nil end
 		i = i + 1
 		return seq[i-1]
 	end
@@ -362,7 +362,7 @@ end
 function aoc.sort(seq, cmp)
 	cmp = cmp or aoc.less_than
 	if is_custom_iterable(seq) then
-		aoc.quick_sort(seq, cmp, 1, #seq)
+		aoc.quick_sort(seq, cmp, 1, aoc.len(seq))
 	else
 		table.sort(seq, cmp)
 	end
@@ -400,7 +400,7 @@ end
 
 function aoc.foldi(seq, initial, f)
 	local acc = initial
-	for i = 1, #seq do
+	for i = 1, aoc.len(seq) do
 		acc = f(acc, seq[i], i)
 	end
 	return acc
@@ -410,7 +410,7 @@ end
 --@param f function(any, integer)
 function aoc.mapi(seq, f)
 	local acc = {}
-	for i = 1, #seq do
+	for i = 1, aoc.len(seq) do
 		table.insert(acc, f(seq[i], i))
 	end
 	return acc
@@ -418,8 +418,8 @@ end
 
 function aoc.pairs(seq)
 	local acc = {}
-	for i = 1, #seq - 1 do
-		for j = i+1, #seq do
+	for i = 1, aoc.len(seq) - 1 do
+		for j = i+1, aoc.len(seq) do
 			table.insert(acc, { seq[i], seq[j] })
 		end
 	end
@@ -427,7 +427,7 @@ function aoc.pairs(seq)
 end
 
 function aoc.find_char(c, str)
-	for i = 1, #str do
+	for i = 1, aoc.len(str) do
 		if str:sub(i, i) == c then
 			return i
 		end
@@ -440,7 +440,7 @@ end
 ---@param elt T
 ---@return integer?
 function aoc.list.find(seq, elt)
-	for i = 1, #seq do
+	for i = 1, aoc.len(seq) do
 		if seq[i] == elt then
 			return i
 		end
@@ -451,10 +451,10 @@ end
 function aoc.split_on_spaces(str)
 	local acc = {}
 	local i = 1
-	while i < #str + 1 do
+	while i < aoc.len(str) + 1 do
 		if str:sub(i, i) ~= " " then
 			local k = 0
-			while (i+k+1) <= #str and str:sub(i+k+1, i+k+1) ~= " " do
+			while (i+k+1) <= aoc.len(str) and str:sub(i+k+1, i+k+1) ~= " " do
 				k = k + 1
 			end
 			table.insert(acc, str:sub(i, i+k))
@@ -497,7 +497,7 @@ end
 
 function aoc.inverse(seq)
 	local ys = {}
-	for i = 1, #seq do
+	for i = 1, aoc.len(seq) do
 		ys[seq[i]] = i
 	end
 	return ys
@@ -532,7 +532,7 @@ end
 --@param f function
 function aoc.slide_map(seq, n, f)
 	local acc = {}
-	for i = 1, #seq - n + 1 do
+	for i = 1, aoc.len(seq) - n + 1 do
 		table.insert(acc, f(aoc.slice(seq, i, i + n - 1)))
 	end
 	return acc
@@ -540,7 +540,7 @@ end
 
 function aoc.ring_map(seq, n, f)
 	local acc = {}
-	for i = 1, #seq do
+	for i = 1, aoc.len(seq) do
 		table.insert(acc, f(aoc.slice(seq, i, i + n - 1)))
 	end
 	return acc
@@ -549,17 +549,17 @@ end
 -- remove the last element and put it at the beginning
 function aoc.cycle(seq)
 	local acc = aoc.from_list(seq)
-	local last = acc[#acc]
-	table.remove(acc, #acc)
+	local last = acc[aoc.len(acc)]
+	table.remove(acc, aoc.len(acc))
 	table.insert(acc, 1, last)
 	return acc
 end
 
 -- filter sequence using a boolean mask
 function aoc.filter_mask(seq, mask)
-	assert(#seq == #mask)
+	assert(aoc.len(seq) == aoc.len(mask))
 	local acc = {}
-	for i = 1, #seq do
+	for i = 1, aoc.len(seq) do
 		if mask[i] then
 			table.insert(acc, seq[i])
 		end
@@ -576,8 +576,8 @@ function aoc.vec2_eq(v, w) return v[1] == w[1] and v[2] == w[2] end
 ---@return Z[]
 function aoc.list.zip_with(f, xs, ys)
 	local zs = {}
-	assert(#xs == #ys)
-	for i = 1, #xs do
+	assert(aoc.len(xs) == aoc.len(ys))
+	for i = 1, aoc.len(xs) do
 		table.insert(zs, f(xs[i], ys[i]))
 	end
 	return zs
@@ -590,7 +590,7 @@ end
 ---@param eq fun (x: T, y: T): boolean
 ---@return boolean
 function aoc.list.belongs_to(elt, set, eq)
-	for i = 1, #set do
+	for i = 1, aoc.len(set) do
 		if eq(elt, set[i]) then return true end
 	end
 	return false
@@ -607,9 +607,9 @@ end
 ---@return T[]
 function aoc.list.slice(seq, from , to)
 	local acc = {}
-	if to > #seq then to = to % #seq end
+	if to > aoc.len(seq) then to = to % aoc.len(seq) end
 	if to < from then
-		for i = from, #seq do
+		for i = from, aoc.len(seq) do
 			table.insert(acc, seq[i])
 		end
 		for i = 1, to do
@@ -627,7 +627,7 @@ end
 ---@param seq T[]
 ---@param f fun (x: T): nil
 function aoc.list.each(seq, f)
-	for i = 1, #seq do
+	for i = 1, aoc.len(seq) do
 		f(seq[i])
 	end
 end
@@ -638,7 +638,7 @@ end
 ---@return T
 function aoc.list.reduce(seq, f)
 	local acc = seq[1]
-	for i = 2, #seq do
+	for i = 2, aoc.len(seq) do
 		acc = f(acc, seq[i])
 	end
 	return acc
@@ -650,7 +650,7 @@ end
 ---@return U[]
 function aoc.list.map(seq, f)
 	local acc = {}
-	for i = 1, #seq do
+	for i = 1, aoc.len(seq) do
 		table.insert(acc, f(seq[i]))
 	end
 	return acc
@@ -662,7 +662,7 @@ end
 ---@return T[]
 function aoc.list.filter(seq, pred)
 	local acc = {}
-	for i = 1, #seq do
+	for i = 1, aoc.len(seq) do
 		if pred(seq[i]) then
 			table.insert(acc, seq[i])
 		end
@@ -678,8 +678,8 @@ end
 ---@param str string
 ---@return string, string
 function aoc.cut_half(str)
-	assert(aoc.is_even(#str))
-	return string.sub(str, 1, #str / 2), string.sub(str, #str / 2 + 1, #str)
+	assert(aoc.is_even(aoc.len(str)))
+	return string.sub(str, 1, aoc.len(str) / 2), string.sub(str, aoc.len(str) / 2 + 1, aoc.len(str))
 end
 
 ---@generic T
@@ -688,10 +688,10 @@ end
 ---@return T[][]
 function aoc.cut_right_on(xs, elt)
 	local rss = {}
-	for i = 1, #xs do
-		if i < #xs and xs[i] == elt then
-			local rs = aoc.slice(xs, i+1, #xs)
-			if #rs > 0 then
+	for i = 1, aoc.len(xs) do
+		if i < aoc.len(xs) and xs[i] == elt then
+			local rs = aoc.slice(xs, i+1, aoc.len(xs))
+			if aoc.len(rs) > 0 then
 				table.insert(rss, rs)
 			end
 		end
@@ -703,11 +703,11 @@ end
 ---@param xs T[]
 ---@return T?
 function aoc.max_of(xs)
-	if #xs == 0 then
+	if aoc.len(xs) == 0 then
 		return nil
 	end
 	local max = xs[1]
-	for i = 2, #xs do
+	for i = 2, aoc.len(xs) do
 		if xs[i] > max then
 			max = xs[i]
 		end
@@ -719,7 +719,7 @@ end
 ---@return string
 function aoc.join(cs)
 	local s = ""
-	for i = 1, #cs do
+	for i = 1, aoc.len(cs) do
 		s = s .. cs[i]
 	end
 	return s
@@ -729,7 +729,7 @@ end
 ---@return integer
 function aoc.int_of_char_list(cs)
 	local n = 0
-	for i = 1, #cs do
+	for i = 1, aoc.len(cs) do
 		n = n*10 + cs[i]
 	end
 	return n
@@ -746,7 +746,7 @@ end
 ---@return integer[]
 function aoc.digits(str)
 	local ds = {}
-	for i = 1, #str do
+	for i = 1, aoc.len(str) do
 		table.insert(ds, tonumber(string.sub(str, i, i)))
 	end
 	return ds
@@ -907,14 +907,14 @@ function aoc.less_than(a, b) return a < b end
 function aoc.transpose_view(mat)
 	-- The outer proxy (columns)
 	return setmetatable({}, {
-			__len = function ()
-				return #mat > 0 and (#(mat[1])) or 0
+			__len = function (_)
+				return aoc.len(mat) > 0 and (aoc.len(mat[1])) or 0
 			end,
 			__index = function(_, col)
 				-- For each "column", return a row-proxy
 				return setmetatable({}, {
-						__len = function ()
-							return #mat
+						__len = function (_)
+							return aoc.len(mat)
 						end,
 						__index = function(_, row)
 							return mat[row][col]
@@ -926,6 +926,16 @@ function aoc.transpose_view(mat)
 				})
 			end
 	})
+end
+
+---@param x any
+function aoc.len (x)
+	local mt = getmetatable(x)
+	if mt and mt.__len then
+		return mt.__len(x)
+	else
+		return #x
+	end
 end
 
 function aoc.cmp(a, b)
@@ -1052,7 +1062,7 @@ function aoc.pad_right(s, l, _)
 		local fmt = "%-" .. tostring(l) .. "s"
 		return string.format(fmt, s)
 	else
-		while #s < l do
+		while aoc.len(s) < l do
 			s = s .. " "
 		end
 		return s
@@ -1071,7 +1081,7 @@ end
 ---@return string[][]
 function aoc.parse_separated_matrix (filename, is_sep)
 	local lines = aoc.collect(io.lines(filename))
-	local l = aoc.foldi(lines, 0, function (acc, x, _) return math.max(acc, #x) end)
+	local l = aoc.foldi(lines, 0, function (acc, x, _) return math.max(acc, aoc.len(x)) end)
 	local padded_lines = aoc.list.map(lines, function (x) return aoc.pad_right(x, l) end)
 	local rows = aoc.list.map(padded_lines, function () return {} end)
 	local beg = 1
@@ -1081,7 +1091,7 @@ function aoc.parse_separated_matrix (filename, is_sep)
 	end
 
 	local function f (s)
-		for r = 1, #padded_lines do
+		for r = 1, aoc.len(padded_lines) do
 			table.insert(rows[r], string.sub(padded_lines[r], beg, math.min(s-1, l)))
 		end
 		beg = s+1
