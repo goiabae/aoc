@@ -1,41 +1,63 @@
 local aoc = require("aoc")
 
-local function is_equatable(nums, op_count, ops)
+---@param nums integer[]
+---@param ops (fun (x: integer, y: integer): integer)[]
+local function is_equatable(nums, ops)
+	local op_count = #ops
 	local operation_count = (#nums - 1) - 1
-	local combination_count = math.floor(op_count ^ operation_count)
 	local calibration_result = nums[1]
 
-	for i = 0, combination_count-1 do
-		local result = nums[2]
-		for j = 0, operation_count-1 do
-			local it = nums[j + 3]
-			local op = (math.floor(i / (op_count ^ j)) % op_count) + 1
-			result = ops[op](result, it)
+	---@type integer[]
+	local set = { nums[2] }
+
+	for i = 1, operation_count-1 do
+		local cur = {}
+		local num =  nums[i+2]
+		for _, acc in pairs(set) do
+			for j = 1, op_count do
+				local value = ops[j](acc, num)
+				if value <= calibration_result then
+					table.insert(cur, value)
+				end
+			end
 		end
-		if result == calibration_result then
-			return true
+		set = cur
+	end
+
+	local num =  nums[#nums]
+	for _, acc in pairs(set) do
+		for j = 1, op_count do
+			if ops[j](acc, num) == calibration_result then
+				return true
+			end
 		end
 	end
+
 	return false
 end
 
-local function partn(filename, ops)
-	local total = 0
-	for line in io.lines(filename) do
-		local nums = aoc.map(aoc.split_with(line, ": "), tonumber)
-		if is_equatable(nums, #ops, ops) then
-			total = total + nums[1]
-		end
-	end
-	return total
+---@param x integer
+---@param y integer
+---@return integer
+local function concat_int(x, y)
+	return x * 10 * (10 ^ (math.floor(math.log(y, 10)))) + y
 end
 
-local function concat(x, y) return tonumber(x .. y) end
+local o1 = { aoc.add, aoc.mul }
+local o2 = { aoc.add, aoc.mul, concat_int }
 
-local function part1(filename) return partn(filename, { aoc.add, aoc.mul }) end
-local function part2(filename) return partn(filename, { aoc.add, aoc.mul, concat }) end
+---@type solver
+local function solve (filename)
+	local s1 = 0
+	local s2 = 0
+	for line in io.lines(filename) do
+		local nums = aoc.list.map(aoc.split_with(line, ": "), tonumber)
+		s1 = s1 + aoc.b2i(is_equatable(nums, o1)) * nums[1]
+		s2 = s2 + aoc.b2i(is_equatable(nums, o2)) * nums[1]
+	end
 
-assert(part1("example") == 3749)
-assert(part1("input") == 4364915411363)
-assert(part2("example") == 11387)
-assert(part2("input") == 38322057216320)
+	return s1, s2
+end
+
+aoc.verify(solve, "example", 3749, 11387)
+aoc.verify(solve, "input", 4364915411363, 38322057216320)
