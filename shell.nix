@@ -1,7 +1,6 @@
 { pkgs ? import <nixpkgs> {} }:
 with pkgs; mkShell {
   packages = [
-    aoc-cli
     lua
     luajit
     lua-language-server
@@ -11,6 +10,6 @@ with pkgs; mkShell {
   hardeningDisable = [ "fortify" ];
 
   shellHook = ''
-    export LUA_PATH="$LUA_PATH;/home/goiabae/source/aoc/lib/?.lua"
+    export LUA_PATH="/home/goiabae/source/aoc/lib/?.lua;$LUA_PATH"
   '';
 }
