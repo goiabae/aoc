@@ -1,10 +1,33 @@
-local aoc = {}
+---@class list
+local list = {}
 
-aoc.list = {}
+---@class iter
+local iter = {}
 
----@alias iterator<T> fun (): T?
----@alias iterator2<T, U> fun (): T, U
----@alias iterator3<T, U, V> fun (): T, U, V
+---@class map
+local map = {}
+
+---@class matrix
+local matrix = {}
+
+---@class range_set
+local range_set = {}
+
+---@class aoc
+---@field list list
+---@field iter iter
+---@field map map
+---@field matrix matrix
+---@field range_set range_set
+local aoc = {
+	list = list,
+	iter = iter,
+	map = map,
+	matrix = matrix,
+	range_set = range_set,
+}
+
+---@alias iterator<T...> fun (): T...?
 
 function aoc.fdiv(x, y)
 	return (x - (x % y)) / y
@@ -32,7 +55,7 @@ end
 ---@param seq T[]
 ---@param f fun (i: integer, x: T): integer
 ---@return integer
-function aoc.list.sum(seq, f)
+function list.sum(seq, f)
 	local total = 0
 	for i = 1, aoc.len(seq) do
 		total = total + f(i, seq[i])
@@ -44,7 +67,7 @@ end
 ---@param seq T[]
 ---@param pred fun (i: integer, x: T): boolean
 ---@return integer
-function aoc.list.count(seq, pred)
+function list.count(seq, pred)
 	local total = 0
 	for i = 1, aoc.len(seq) do
 		if pred(i, seq[i]) then
@@ -56,6 +79,9 @@ end
 
 -- keys are elements, values are the frequencies of each key in seq
 -- if the key was not in seq, frequency is 0
+---@generic T
+---@param seq T[]
+---@return table<T, integer>
 function aoc.make_bag(seq)
 	local bag = {}
 	local meta = { __index = function() return 0 end }
@@ -71,18 +97,6 @@ function aoc.make_bag(seq)
 	return bag
 end
 
-function aoc.transpose(rows)
-	local res = {}
-	for i = 1, aoc.len(rows[1]) do
-		table.insert(res, {})
-		for j = 1, aoc.len(rows) do
-			table.insert(res[i], rows[j][i])
-		end
-	end
-	return res
-end
-
-
 --@param seq any[]
 --@param f function
 --@return any[]
@@ -97,10 +111,11 @@ function aoc.filter_map(seq, f)
 	return res
 end
 
---@param seq any[]
---@param pred function
---@return boolean
-function aoc.for_all(seq, pred)
+---@generic T
+---@param seq T[]
+---@param pred fun (x: T): boolean
+---@return boolean
+function list.for_all(seq, pred)
 	for elt in aoc.list.iter(seq) do
 		if not pred(elt) then
 			return false
@@ -109,10 +124,11 @@ function aoc.for_all(seq, pred)
 	return true
 end
 
---@param seq any[]
---@param pred function
---@return boolean
-function aoc.exists(seq, pred)
+---@generic T
+---@param seq T[]
+---@param pred fun (x: T): boolean
+---@return boolean
+function list.exists(seq, pred)
 	for elt in aoc.list.iter(seq) do
 		if pred(elt) then
 			return true
@@ -197,7 +213,7 @@ end
 
 -- collect an iterator into a list
 ---@generic T, U
----@param it iterator2<T, U>
+---@param it iterator<T, U>
 ---@return [T, U][]
 function aoc.collect2(it)
 	local acc = {}
@@ -214,7 +230,7 @@ end
 
 -- collect an iterator into a list
 ---@generic T, U, V
----@param it iterator3<T, U, V>
+---@param it iterator<T, U, V>
 ---@return [T, U, V][]
 function aoc.collect3(it)
 	local acc = {}
@@ -229,9 +245,10 @@ function aoc.collect3(it)
 	return acc
 end
 
-function aoc.id(x)
-	return x
-end
+---@generic T...
+---@param ... T...
+---@return T...
+function aoc.id(...) return ... end
 
 ---@param str string
 ---@return string[]
@@ -271,7 +288,7 @@ function aoc.concat(x, y)
 	return x .. y
 end
 
-function aoc.list.concat(xs, ys)
+function list.concat(xs, ys)
 	local zs = {}
 	for x in aoc.list.iter(xs) do
 		table.insert(zs, x)
@@ -280,19 +297,6 @@ function aoc.list.concat(xs, ys)
 		table.insert(zs, y)
 	end
 	return zs
-end
-
-function aoc.test(tests)
-	aoc.each(
-		function (test)
-			local output = test.func(test.input)
-			print("  " .. output)
-			if test.output then
-				assert(output == test.output)
-			end
-		end,
-		tests
-	)
 end
 
 -- given a table and a list on indexes returns the equivalent of tab[idxs[1]][idxs[2]]...[idxs[n]]
@@ -320,14 +324,6 @@ end
 -- B combinator
 function aoc.compose(f, g)
 	return function(x) return g(f(x)) end
-end
-
-function aoc.from_list(seq)
-	local list = {}
-	for i = 1, aoc.len(seq) do
-		table.insert(list, seq[i])
-	end
-	return list
 end
 
 function aoc.get(seq, col)
@@ -358,7 +354,7 @@ function aoc.group(seq, n)
 	return acc
 end
 
-function aoc.list.iter(seq)
+function list.iter(seq)
 	local i = 1
 	return function()
 		if i > aoc.len(seq) then return nil end
@@ -367,12 +363,10 @@ function aoc.list.iter(seq)
 	end
 end
 
-aoc.map = {}
-
 ---@generic K, V
 ---@param xm table<K, V>
----@return iterator2<K, V>
-function aoc.map.iter (xm)
+---@return iterator<K, V>
+function map.iter (xm)
 	local f, t, k = pairs(xm)
 	return function ()
 		k = f(t, k)
@@ -382,7 +376,11 @@ function aoc.map.iter (xm)
 	end
 end
 
-function aoc.map.exists (xm, pred)
+---@generic K, V
+---@param xm table<K, V>
+---@param pred fun(k: K, v: V): boolean
+---@return boolean
+function map.exists (xm, pred)
 	for k, v in pairs(xm) do
 		if pred(k, v) then
 			return true
@@ -391,7 +389,7 @@ function aoc.map.exists (xm, pred)
 	return false
 end
 
-function aoc.map.count (xm, pred)
+function map.count (xm, pred)
 	local s = 0
 	for k, v in pairs(xm) do
 		if pred(k, v) then
@@ -401,7 +399,10 @@ function aoc.map.count (xm, pred)
 	return s
 end
 
-function aoc.matrix_iter(mat)
+---@generic T
+---@param mat T[][]
+---@return iterator<integer, integer, T>
+function matrix.iter(mat)
 	return coroutine.wrap(function ()
 		for i, row in ipairs(mat) do
 			for j, v in ipairs(row) do
@@ -412,7 +413,7 @@ function aoc.matrix_iter(mat)
 end
 
 ---@param p [integer, integer]
-function aoc.matrix_at (mat, p)
+function matrix.at (mat, p)
 	return (mat and mat[p[1]] and mat[p[1]][p[2]]) or nil
 end
 
@@ -506,7 +507,7 @@ end
 ---@param seq T[]
 ---@param elt T
 ---@return integer?
-function aoc.list.find(seq, elt)
+function list.find(seq, elt)
 	for i = 1, aoc.len(seq) do
 		if seq[i] == elt then
 			return i
@@ -515,21 +516,10 @@ function aoc.list.find(seq, elt)
 	return nil
 end
 
+---@param str string
+---@return string[]
 function aoc.split_on_spaces(str)
-	local acc = {}
-	local i = 1
-	while i < aoc.len(str) + 1 do
-		if str:sub(i, i) ~= " " then
-			local k = 0
-			while (i+k+1) <= aoc.len(str) and str:sub(i+k+1, i+k+1) ~= " " do
-				k = k + 1
-			end
-			table.insert(acc, str:sub(i, i+k))
-			i = i + k
-		end
-		i = i + 1
-	end
-	return acc
+	return aoc.split_with(str, " ")
 end
 
 ---@generic T
@@ -603,7 +593,7 @@ end
 function aoc.slide_map(seq, n, f)
 	local acc = {}
 	for i = 1, aoc.len(seq) - n + 1 do
-		table.insert(acc, f(aoc.slice(seq, i, i + n - 1)))
+		table.insert(acc, f(list.slice(seq, i, i + n - 1)))
 	end
 	return acc
 end
@@ -611,24 +601,15 @@ end
 function aoc.ring_map(seq, n, f)
 	local acc = {}
 	for i = 1, aoc.len(seq) do
-		table.insert(acc, f(aoc.slice(seq, i, i + n - 1)))
+		table.insert(acc, f(list.slice(seq, i, i + n - 1)))
 	end
-	return acc
-end
-
--- remove the last element and put it at the beginning
-function aoc.cycle(seq)
-	local acc = aoc.from_list(seq)
-	local last = acc[aoc.len(acc)]
-	table.remove(acc, aoc.len(acc))
-	table.insert(acc, 1, last)
 	return acc
 end
 
 ---@generic T
 ---@param seq T[]
 ---@return T?
-function aoc.last(seq)
+function list.last(seq)
 	return seq[aoc.len(seq)]
 end
 
@@ -666,7 +647,7 @@ end
 ---@param set T[]
 ---@param eq fun (x: T, y: T): boolean
 ---@return boolean
-function aoc.list.belongs_to(elt, set, eq)
+function list.belongs_to(elt, set, eq)
 	for i = 1, aoc.len(set) do
 		if eq(elt, set[i]) then return true end
 	end
@@ -682,7 +663,7 @@ end
 ---@param from integer
 ---@param to integer
 ---@return T[]
-function aoc.list.slice(seq, from , to)
+function list.slice(seq, from , to)
 	local acc = {}
 	if to > aoc.len(seq) then to = to % aoc.len(seq) end
 	if to < from then
@@ -703,7 +684,7 @@ end
 ---@generic T
 ---@param seq T[]
 ---@param f fun (x: T): nil
-function aoc.list.each(seq, f)
+function list.each(seq, f)
 	for i = 1, aoc.len(seq) do
 		f(seq[i])
 	end
@@ -713,7 +694,7 @@ end
 ---@param seq T[]
 ---@param f fun (acc: T, x: T): T
 ---@return T
-function aoc.list.reduce(seq, f)
+function list.reduce(seq, f)
 	local acc = seq[1]
 	for i = 2, aoc.len(seq) do
 		acc = f(acc, seq[i])
@@ -725,7 +706,7 @@ end
 ---@param seq T[]
 ---@param f fun (x: T): U
 ---@return U[]
-function aoc.list.map(seq, f)
+function list.map(seq, f)
 	local acc = {}
 	for i = 1, aoc.len(seq) do
 		table.insert(acc, f(seq[i]))
@@ -737,7 +718,7 @@ end
 ---@param seq T[]
 ---@param pred fun (x: T): boolean
 ---@return T[]
-function aoc.list.filter(seq, pred)
+function list.filter(seq, pred)
 	local acc = {}
 	for i = 1, aoc.len(seq) do
 		if pred(seq[i]) then
@@ -767,7 +748,7 @@ function aoc.cut_right_on(xs, elt)
 	local rss = {}
 	for i = 1, aoc.len(xs) do
 		if i < aoc.len(xs) and xs[i] == elt then
-			local rs = aoc.slice(xs, i+1, aoc.len(xs))
+			local rs = list.slice(xs, i+1, aoc.len(xs))
 			if aoc.len(rs) > 0 then
 				table.insert(rss, rs)
 			end
@@ -829,26 +810,24 @@ function aoc.digits(str)
 	return ds
 end
 
-aoc.iter = {}
-
----@generic T, U
----@param it iterator<T>
----@param f fun (x: T): U
----@return iterator<U>
-function aoc.iter.map(it, f)
+---@generic T..., U...
+---@param it iterator<T...>
+---@param f fun (T...): U...
+---@return iterator<U...>
+function iter.map(it, f)
 	return function ()
-		local v = it()
-		if v == nil then
-			return nil
-		else
-			return f(v)
-		end
+		return (function (a, ...)
+			if a == nil then
+				return nil
+			end
+			return f(a, ...)
+		end)(it())
 	end
 end
 
 ---@param it iterator<integer>
 ---@return integer
-function aoc.iter.sum(it)
+function iter.sum(it)
 	local acc = 0
 	for v in it do
 		acc = acc + v
@@ -856,30 +835,71 @@ function aoc.iter.sum(it)
 	return acc
 end
 
----@generic T
----@param it iterator<T>
----@param f fun (x: T): integer, integer
+---@param it iterator<integer, integer>
 ---@return integer, integer
-function aoc.iter.unzip2_sum(it, f)
-	local s1, s2 = 0, 0
-	for v in it do
-		local v1, v2 = f(v)
-		s1, s2 = s1 + v1, s2 + v2
+function iter.sum2(it)
+	local s, s2 = 0, 0
+	for v1, v2 in it do
+		s, s2 = s + v1, s2 + v2
 	end
-	return s1, s2
+	return s, s2
 end
 
 ---@generic T
 ---@param it iterator<T>
----@param f fun (x: T): boolean, boolean
+---@return T?
+function iter.last (it)
+	local v = nil
+	while true do
+		local w = it()
+		if w == nil then
+			return v
+		end
+		v = w
+	end
+end
+
+---@generic T, U
+---@param it iterator<T, U>
+---@param f fun (t: T, u: U): boolean, boolean
 ---@return integer, integer
-function aoc.iter.unzip2_count(it, f)
+function iter.count2(it, f)
 	local s1, s2 = 0, 0
-	for v in it do
-		local v1, v2 = f(v)
-		s1, s2 = s1 + (v1 and 1 or 0), s2 + (v2 and 1 or 0)
+	for v1, v2 in it do
+		local b1, b2 = f(v1, v2)
+		if b1 then
+			s1 = s1 + 1
+		end
+		if b2 then
+			s2 = s2 + 1
+		end
 	end
 	return s1, s2
+end
+
+---@return iterator<integer>
+function iter.iota()
+	local i = 1
+	return function ()
+		i = i + 1
+		return i-1
+	end
+end
+
+---@generic T...
+---@param it iterator<T...>
+---@param n integer
+---@return iterator<T...>
+function iter.take(it, n)
+	local c = 1
+	return function ()
+		if c > n then
+			return nil
+		else
+			c = c + 1
+			return it()
+		end
+	end
 end
 
 ---@generic T
@@ -888,7 +908,7 @@ end
 ---@param j integer
 ---@param elt T
 ---@return integer
-function aoc.count_adjacent(mat, i, j, elt)
+function matrix.count_adjacent(mat, i, j, elt)
 	local function f (x, y)
 		return (mat[x] and mat[x][y] or nil) == elt and 1 or 0
 	end
@@ -904,7 +924,7 @@ end
 ---@param j integer
 ---@param pred fun (x: T): boolean
 ---@return boolean
-function aoc.for_all_adjacent(mat, i, j, pred)
+function matrix.for_all_adjacent(mat, i, j, pred)
 	local function f (x, y)
 		return (mat[x] and mat[x][y] and pred(mat[x][y])) or false
 	end
@@ -920,7 +940,7 @@ end
 ---@param j integer
 ---@param pred fun (x: T): boolean
 ---@return boolean
-function aoc.exists_adjacent(mat, i, j, pred)
+function matrix.exists_adjacent(mat, i, j, pred)
 	local function f (x, y)
 		return (mat[x] and mat[x][y] and pred(mat[x][y])) or false
 	end
@@ -930,7 +950,7 @@ function aoc.exists_adjacent(mat, i, j, pred)
 		or f(i+1, j-1) or f(i+1, j) or f(i+1, j+1)
 end
 
-function aoc.iter.filter3(it, pred)
+function iter.filter3(it, pred)
 	local function f ()
 		local v1, v2, v3 = it()
 		if v1 and v2 and v3 then
@@ -944,29 +964,31 @@ function aoc.iter.filter3(it, pred)
 	return f
 end
 
----@generic T
----@param it iterator<T>
----@param pred fun (x: T): boolean
----@return iterator<T>
-function aoc.iter.filter(it, pred)
-	local function f ()
-		local v = it()
-		if v then
-			if pred(v) then
-				return v
+---@generic I...
+---@param it iterator<I...>
+---@param pred fun(I...): boolean
+---@return iterator<I...>
+function iter.filter(it, pred)
+	return function()
+		local function cont(a, ...)
+			if a == nil then
+				return nil
+			end
+			if pred(a, ...) then
+				return a, ...
 			else
-				return f()
+				return cont(it())
 			end
 		end
+		return cont(it())
 	end
-	return f
 end
 
 ---@generic T, U
----@param it iterator2<T, U>
+---@param it iterator<T, U>
 ---@param pred fun (t: T, u: U): boolean
 ---@return T, U
-function aoc.iter.find2(it, pred)
+function iter.find2(it, pred)
 	for v1, v2 in it do
 		if pred(v1, v2) then
 			return v1, v2
@@ -979,7 +1001,7 @@ end
 ---@param it iterator<T>
 ---@param f fun (t: T): U?
 ---@return iterator<U>
-function aoc.iter.filter_map(it, f)
+function iter.filter_map(it, f)
 	local function recur ()
 		local v = it()
 		if v then
@@ -998,7 +1020,7 @@ function aoc.equals3(v)
 	return function (_, _, x) return x == v end
 end
 
-function aoc.iter.count(it)
+function iter.count(it)
 	local s = 0
 	for _ in it do
 		s = s + 1
@@ -1010,7 +1032,7 @@ end
 ---@param it iterator<T>
 ---@param pred fun (x: T): boolean
 ---@return boolean
-function aoc.iter.for_all(it, pred)
+function iter.for_all(it, pred)
 	for elt in it do
 		if not pred(elt) then
 			return false
@@ -1023,7 +1045,7 @@ end
 ---@param it iterator<T>
 ---@param pred fun (x: T): boolean
 ---@return boolean
-function aoc.iter.exists(it, pred)
+function iter.exists(it, pred)
 	for elt in it do
 		if pred(elt) then
 			return true
@@ -1044,7 +1066,10 @@ end
 
 function aoc.less_than(a, b) return a < b end
 
-function aoc.transpose_view(mat)
+---@generic T
+---@param mat T[][]
+---@return T[][]
+function matrix.transpose_view(mat)
 	-- The outer proxy (columns)
 	return setmetatable({}, {
 			__len = function (_)
@@ -1081,9 +1106,6 @@ end
 function aoc.cmp(a, b)
 	if a < b then return -1 elseif a > b then return 1 else return 0 end
 end
-
-local range_set = {}
-aoc.range_set = range_set
 
 function range_set.make()
 	return nil
@@ -1153,10 +1175,8 @@ function range_set.insert(set, r)
 	return set
 end
 
--- Returns:
--- - root
--- - minimun node
-function aoc.range_set.min_node(set, should_remove)
+-- Returns a, possibly new, root node, and minimum node
+function range_set.min_node(set, should_remove)
 	if set == nil then return nil, nil end
 
 	if set.left == nil then
@@ -1174,12 +1194,13 @@ function aoc.range_set.min_node(set, should_remove)
 	end
 end
 
-function aoc.range_set.min(set)
-	local _, node = aoc.range_set.min_node(set, false)
+function range_set.min(set)
+	local _, node = range_set.min_node(set, false)
 	return node and node.low
 end
 
-function aoc.range_set.max_node(set, should_remove)
+-- Returns a, possibly new, root node, and maximum node
+function range_set.max_node(set, should_remove)
 	if set == nil then return nil, nil end
 
 	if set.right == nil then
@@ -1191,14 +1212,14 @@ function aoc.range_set.max_node(set, should_remove)
 			return set, set
 		end
 	else
-		local right, m = aoc.range_set.max_node(set.right, should_remove)
+		local right, m = range_set.max_node(set.right, should_remove)
 		set.right = right
 		return set, m
 	end
 end
 
-function aoc.range_set.max(set)
-	local _, node = aoc.range_set.max_node(set, false)
+function range_set.max(set)
+	local _, node = range_set.max_node(set, false)
 	return node and node.high
 end
 
@@ -1213,12 +1234,12 @@ local function aux (set, transformed, transforms)
 		if set.left == nil and set.right == nil then
 			return nil
 		elseif set.left == nil then
-			local nright, node = aoc.range_set.min_node(set.right, true)
+			local nright, node = range_set.min_node(set.right, true)
 			node.right = nright
 			node.left = set.left
 			return node
 		else
-			local nleft, node = aoc.range_set.max_node(set.left, true)
+			local nleft, node = range_set.max_node(set.left, true)
 			node.left = nleft
 			node.right = set.right
 			return node
@@ -1515,7 +1536,7 @@ function aoc.parse_separated_matrix (filename, is_sep)
 	local beg = 1
 
 	local function all_spaces (c)
-		return aoc.for_all(padded_lines, function (line) return is_sep(string.sub(line, c, c)) end)
+		return list.for_all(padded_lines, function (line) return is_sep(string.sub(line, c, c)) end)
 	end
 
 	local function f (s)
@@ -1538,26 +1559,12 @@ end
 ---@param size integer
 ---@param elt T
 ---@return T
-function aoc.list.init (size, elt)
+function list.init (size, elt)
 	local xs = {}
 	for i = 1, size do
 		xs[i] = elt
 	end
 	return xs
-end
-
----@generic T
----@param it iterator<T>
----@return T?
-function aoc.iter.last (it)
-	local v = nil
-	while true do
-		local w = it()
-		if w == nil then
-			return v
-		end
-		v = w
-	end
 end
 
 function aoc.b2i (x) return x and 1 or 0 end
@@ -1580,4 +1587,5 @@ function aoc.split_sub (str, sep)
 	end)
 end
 
+---@return aoc
 return aoc
