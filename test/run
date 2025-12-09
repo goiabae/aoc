@@ -1,68 +1,47 @@
-#!/usr/bin/env bash
+#!/usr/bin/env nu
 
-base=$(pwd)
-lib="${base}/lib"
+let base = pwd
+let lib = $base | path join lib
 
-year() {
-	year="${1}"
-	for day in $(seq 1 25); do
-		day "${year}" "${day}" || break
-	done
+def day [y, d] {
+	let dir = pwd | path join $"($y)" $"($d)"
+	if not ($dir | path exists) {
+		return 1
+	}
+
+	cd $dir
+
+	if not ("input" | path exists) {
+		aoc download -I -d $d -y $y
+	}
+
+	print -n $"Day ($d) of ($y) "
+	for f in (glob main.* | append (glob a.*) | append (glob b.*)) {
+		let p = $f | path parse
+		let t = timeit { run-external $"($base)/test/run-($p.extension).sh" '.' $p.stem $lib }
+		print ($t | format duration ms)
+	}
 }
 
-day() {
-	year="${1}"
-	day="${2}"
-	! test -d "${base}/${year}/${day}" && return 1
-	pushd "${base}/${year}/${day}" 1> /dev/null
-	echo "Day ${day} of ${year}"
-	if ! test -f input; then
-		aoc download -I -d $day -y $year
-	fi
-	for f in main.* a.* b.*; do
-		name=${f%.*}
-		ext=${f##*.}
-		if [ "$ext" = "*" ]; then continue; fi
-		"${base}/test/run-${ext}.sh" . "$name" "$lib" || return 1
-	done
-	popd 1> /dev/null
+def year [y] {
+	for d in 1..25 {
+		day $y $d
+	}
 }
 
-help() {
-	echo "Usage:"
-	echo "  $0            run tests for every day of every year"
-	echo "  $0 year       run tests for every day of <year>"
-	echo "  $0 year day   run tests for the nth <day> of <year>"
+def main [year?, day?] {
+	if (which aoc | is-empty) {
+		echo "aoc cli not found"
+		exit 1
+	}
+
+	if $year != null and $day != null {
+		day $year $day
+	} else if $year != null {
+		year $year
+	} else {
+		for y in (ls 20*) {
+			year $y.name
+		}
+	}
 }
-
-if ! command -v aoc 1> /dev/null; then
-	echo aoc cli not found
-	exit 1
-fi
-
-if ! [ -v ADVENT_OF_CODE_SESSION ]; then
-	echo ADVENT_OF_CODE_SESSION is not set
-	exit 1
-fi
-
-while getopts "h" opt; do
-	case "$opt" in
-		h) help; return 0 ;;
-	esac
-done
-
-shift $((OPTIND - 1))
-
-if test "$#" = 1; then
-	year "${1}"
-	return $?
-fi
-
-if test "$#" = 2; then
-	day "${1}" "${2}"
-	return $?
-fi
-
-for year in 20*; do
-	year "${year}"
-done
