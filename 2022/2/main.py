@@ -58,5 +58,5 @@ def get_data(filepath="input"):
     return open(filepath, "r").read().splitlines()
 
 if __name__ == "__main__":
-    print(part1(get_data()))
-    print(part2(get_data()))
+    assert part1(get_data()) == 14827
+    assert part2(get_data()) == 13889
