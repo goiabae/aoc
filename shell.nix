@@ -1,6 +1,7 @@
 { pkgs ? import <nixpkgs> {} }:
 with pkgs; mkShell {
   packages = [
+    python3
     lua
     luajit
     lua-language-server
