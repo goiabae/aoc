@@ -1,81 +1,57 @@
-require("aoc")
+local aoc = require("aoc")
 
-local eq = vec2_eq
+local function eq (a, b) return a[1] == b[1] and a[2] == b[2] end
 
+---@param mat string[][]
+---@return [integer, integer]?
 local function find_start(mat)
-	for i = 1, #mat do
-		for j = 1, #mat[i] do
-			if mat[i][j] == "S" then return { i, j } end
+	for i, j, c in aoc.matrix.iter(mat) do
+		if c == "S" then
+			return { i, j }
 		end
 	end
 end
 
 local function are_connected(a, b, off)
 	if a == nil or b == nil then return false end
-
-	-- b
-	-- a
-	if off[1] == -1 and off[2] == 0 then
-		if (a == "|" or a == "L" or a == "J" or a == "S") and (b == "|" or b == "7" or b == "F") then
-			return true
-		end
-	end
-
-	-- a
-	-- b
-	if off[1] == 1 and off[2] == 0 then
-		if (a == "|" or a == "7" or a == "F" or a == "S") and (b == "|" or b == "L" or b == "J") then
-			return true
-		end
-	end
-
-	-- b a
-	if off[1] == 0 and off[2] == -1 then
-		if (a == "-" or a == "J" or a == "7" or a == "S") and (b == "-" or b == "L" or b == "F") then
-			return true
-		end
-	end
-
-	-- a b
-	if off[1] == 0 and off[2] == 1 then
-		if (a == "-" or a == "L" or a == "F" or a == "S") and (b == "-" or b == "J" or b == "7") then
-			return true
-		end
-	end
-
-	return false
+	return ((off[1] == -1 and off[2] == 0 and (a == "|" or a == "L" or a == "J" or a == "S") and (b == "|" or b == "7" or b == "F")))
+		or (off[1] == 1 and off[2] == 0 and (a == "|" or a == "7" or a == "F" or a == "S") and (b == "|" or b == "L" or b == "J"))
+		or (off[1] == 0 and off[2] == -1 and (a == "-" or a == "J" or a == "7" or a == "S") and (b == "-" or b == "L" or b == "F"))
+		or (off[1] == 0 and off[2] == 1 and (a == "-" or a == "L" or a == "F" or a == "S") and (b == "-" or b == "J" or b == "7"))
 end
 
 local function adj_vec(mat, coord, prev)
+	local x = aoc.matrix.at(mat, coord)
 	for i = -1, 1 do
 		for j = -1, 1 do
-			if i == 0 and j == 0 then goto continue end
-			if are_connected(mat:at(coord), mat:at({ coord[1]+i, coord[2]+j }), { i, j }) and not (i == -prev[1] and j == -prev[2]) then
+			if not (i == 0 and j == 0) and not (i == -prev[1] and j == -prev[2]) and are_connected(x, aoc.matrix.at(mat, { coord[1]+i, coord[2]+j }), { i, j }) then
 				return { i, j }
 			end
-			::continue::
 		end
 	end
 end
 
-local function part1(f)
-	local mat = List.from_iter(io.lines(f)):map(split_chars)
-	local path = List()
+---@param start [integer, integer]
+local function part1(mat, start)
+	local coord = start
 
+	local path_len = 0
 	local vec = { 0, 0 }
-	local coord = find_start(mat)
 
 	while vec ~= nil do
 		coord = { coord[1] + vec[1], coord[2] + vec[2] }
-		table.insert(path, coord)
+		path_len = path_len + 1
 		vec = adj_vec(mat, coord, vec)
 	end
 
-	return #path / 2
+	return path_len / 2
 end
 
+---@param mat string[][]
+---@param start [integer, integer]
+---@return [integer, integer][]
 local function find_loop(mat, start)
-	local path = List()
+	local path = {}
 	local coord = start
 
 	local vec = { 0, 0 }
@@ -96,41 +72,29 @@ local function start_equiv(path)
 	local d1 = { start[1] - prev[1], start[2] - prev[2] }
 	local d2 = { next[1] - start[1], next[2] - start[2] }
 
-	-- | -
-	if eq(d1, d2) then
-		if d1[1] ~= 0 then return "|" else return "-" end
-	end
-
-	-- F 7
-	if eq(d1, { -1, 0 }) then
-		if eq(d2, { 0, 1 }) then
-			return "F"
-		else
-			return "7"
-		end
-	end
-
-	-- L J
-	if eq(d1, { 1, 0 }) then
-		if eq(d2, { 0, 1}) then
-			return "L"
-		else
-			return " J"
-		end
-	end
+	return eq(d1, d2) and (d1[1] ~= 0 and "|" or "-")
+		or eq(d1, { -1, 0 }) and (eq(d2, { 0, 1 }) and "F" or "7")
+		or (eq(d1, { 1, 0 }) and (eq(d2, { 0, 1}) and "L" or "J") or nil)
 end
 
-local function part2(f)
-	local mat = List.from_iter(io.lines(f)):map(split_chars)
-
-	local start = find_start(mat)
+---@param mat string[][]
+---@param start [integer, integer]
+local function part2(mat, start)
 	local path = find_loop(mat, start)
 
 	mat[start[1]][start[2]] = start_equiv(path)
 
+	local set = {}
+	for i = 1, #path do
+		local a = path[i][1]
+		local b = path[i][2]
+		set[a] = set[a] or {}
+		set[a][b] = set[a][b] or true
+	end
+
 	for i = 1, #mat do
 		for j = 1, #mat[i] do
-			if not belongs_to({i, j}, path, eq) then
+			if not aoc.matrix.at(set, {i, j}) then
 				mat[i][j] = "."
 			end
 		end
@@ -154,7 +118,7 @@ local function part2(f)
 				goto continue
 			end
 
-			if belongs_to({i, j}, path, eq) then
+			if aoc.matrix.at(set, {i, j}) then
 				local orient = mat[i][j] == "F" or mat[i][j] == "7"
 				local k = 1
 				while mat[i][j+k] == "-" do
@@ -174,11 +138,15 @@ local function part2(f)
 	return total
 end
 
-test({
-	{ func = part1, input = "example", output = 4 },
-	{ func = part1, input = "example2", output = 8 },
-	{ func = part1, input = "input", output = 6831 },
-	{ func = part2, input = "example3", output = 4 },
-	{ func = part2, input = "example4", output = 8 },
-	{ func = part2, input = "input", output = 305 },
-})
+local function solve (filename)
+	local mat = aoc.parse_char_mat(aoc.read_file(filename))
+	local start = assert(find_start(mat))
+	return part1(mat, start), part2(mat, start)
+end
+
+--aoc.assert_eq(part1("example"), 4)
+--aoc.assert_eq(part1("example2"), 8)
+--aoc.assert_eq(part2("example3"), 4)
+--aoc.assert_eq(part2("example4"), 8)
+
+aoc.verify(solve, "input", 6831, 305)

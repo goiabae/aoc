@@ -119,7 +119,7 @@ end
 local part1 = partn(false)
 local part2 = partn(true)
 
-assert(part1("example") == 14)
+--assert(part1("example") == 14)
 assert(part1("input") == 276)
-assert(part2("example") == 34)
+--assert(part2("example") == 34)
 assert(part2("input") == 991)

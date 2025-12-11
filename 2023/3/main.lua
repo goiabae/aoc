@@ -22,7 +22,7 @@ local function adjacent(mat, num)
 		table.insert(adj, { num.i+1, j })
 	end
 
-	return aoc.list.filter(adj, function(coord) return is_symbol(aoc.matrix_at(mat, coord)) end)
+	return aoc.list.filter(adj, function(coord) return is_symbol(aoc.matrix.at(mat, coord)) end)
 end
 
 ---@param filename string
@@ -54,7 +54,7 @@ end
 local function sum_parts(mat, nums)
 	return aoc.list.sum(nums, function (_, part)
 		for j = part.from, part.to do
-			if aoc.exists_adjacent(mat, part.i, j, is_symbol) then
+			if aoc.matrix.exists_adjacent(mat, part.i, j, is_symbol) then
 				return to_number(mat, part.i, part.from, part.to)
 			end
 		end

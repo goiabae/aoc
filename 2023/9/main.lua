@@ -1,9 +1,11 @@
-require("aoc")
+local aoc = require("aoc")
+local list = aoc.list
+local map = aoc.list.map
 
 local function make_triangle(seq)
-	local tri = List.from_list({ seq })
-	while not tri[#tri]:map(function(x) return x == 0 end):reduce(log_and) do
-		table.insert(tri, slide_map(tri[#tri], 2, call2(swap(sub))))
+	local tri = { seq }
+	while list.exists(list.last(tri), aoc.fix(aoc.neq, 0)) do
+		table.insert(tri, aoc.slide_map(tri[#tri], 2, aoc.splat_into(aoc.swap(aoc.sub))))
 	end
 
 	return tri
@@ -25,27 +27,14 @@ local function find_prev(tri)
 	return tri[1][1]
 end
 
-local function part1(f)
-	local hists = List
-		.from_iter(io.lines(f))
-		:map(function(line) return split_on_spaces(line):map(tonumber) end)
-	local tris = hists:map(make_triangle)
-	local next = tris:map(find_next)
-	return next:reduce(plus)
+---@type solver
+local function solve (filename)
+	local hists = map(aoc.collect(io.lines(filename)), function(line) return aoc.split_with(line, " ", tonumber) end)
+	local tris = map(hists, make_triangle)
+	local p1 = list.sum(tris, aoc.snd(find_next))
+	local p2 = list.sum(tris, aoc.snd(find_prev))
+	return p1, p2
 end
 
-local function part2(f)
-	local hists = List
-		.from_iter(io.lines(f))
-		:map(function(line) return split_on_spaces(line):map(tonumber) end)
-	local tris = hists:map(make_triangle)
-	local next = tris:map(find_prev)
-	return next:reduce(plus)
-end
-
-test({
-	{ func = part1, input = "example", output = 114 },
-	{ func = part1, input = "input", output = 1702218515 },
-	{ func = part2, input = "example", output = 2 },
-	{ func = part2, input = "input", output = 925 },
-})
+aoc.verify(solve, "example", 114, 2)
+aoc.verify(solve, "input", 1702218515, 925)

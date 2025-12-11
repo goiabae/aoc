@@ -245,6 +245,23 @@ function aoc.collect3(it)
 	return acc
 end
 
+-- collect iterator values into a list of tuples
+---@generic I...
+---@param it iterator<I...>
+---@return [I...][]
+function iter.collect_many(it)
+	local acc = {}
+	while true do
+		local t = { it() }
+		if aoc.len(t) == 0 then
+			break
+		else
+			table.insert(acc, t)
+		end
+	end
+	return acc
+end
+
 ---@generic T...
 ---@param ... T...
 ---@return T...
@@ -404,9 +421,9 @@ end
 ---@return iterator<integer, integer, T>
 function matrix.iter(mat)
 	return coroutine.wrap(function ()
-		for i, row in ipairs(mat) do
-			for j, v in ipairs(row) do
-				coroutine.yield(i, j, v)
+		for i = 1, aoc.len(mat) do
+			for j = 1, aoc.len(mat[i]) do
+				coroutine.yield(i, j, mat[i][j])
 			end
 		end
 	end)
@@ -484,7 +501,7 @@ function aoc.mapi(seq, f)
 	return acc
 end
 
-function aoc.pairs(seq)
+function list.pairs(seq)
 	local acc = {}
 	for i = 1, aoc.len(seq) - 1 do
 		for j = i+1, aoc.len(seq) do
@@ -658,6 +675,10 @@ function aoc.eq(x, y)
 	return x == y
 end
 
+function aoc.neq(x, y)
+	return x ~= y
+end
+
 ---@generic T
 ---@param seq T[]
 ---@param from integer
@@ -698,6 +719,18 @@ function list.reduce(seq, f)
 	local acc = seq[1]
 	for i = 2, aoc.len(seq) do
 		acc = f(acc, seq[i])
+	end
+	return acc
+end
+
+---@generic T, U
+---@param seq T[]
+---@param f fun (acc: U, x: T): U
+---@return U[]
+function list.reductions(seq, f)
+	local acc = { seq[1] }
+	for i = 2, aoc.len(seq) do
+		table.insert(acc, f(aoc.list.last(acc), seq[i]))
 	end
 	return acc
 end
@@ -1585,6 +1618,12 @@ function aoc.split_sub (str, sep)
 		end
 		coroutine.yield(str:sub(last_end))
 	end)
+end
+
+function aoc.splat_into(f)
+	return function (x)
+		return f(unpack(x))
+	end
 end
 
 ---@return aoc

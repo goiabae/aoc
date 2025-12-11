@@ -1,5 +1,8 @@
 local aoc = require("aoc")
 
+---@param report string[]
+---@param skip? integer
+---@return boolean
 local function is_safe(report, skip)
 	local dec = true
 	local inc = true
@@ -30,24 +33,19 @@ local function is_safe(report, skip)
 	return dec or inc
 end
 
+---@param report string[]
+---@return boolean
 local function tolerating(report)
-	if is_safe(report, nil) then
-		return true
-	end
-	for i = 1, #report do
-		if is_safe(report, i) then
-			return true
-		end
-	end
-	return false
+	return is_safe(report) or aoc.iter.exists(aoc.iter.take(aoc.iter.iota(), #report), aoc.fix(is_safe, report))
 end
 
 ---@type solver
 local function solve (filename)
-	return aoc.iter.unzip2_count(io.lines(filename), function (line)
+	local function f (line)
 		local report = aoc.split_on_spaces(line)
 		return is_safe(report, nil), tolerating(report)
-	end)
+	end
+	return aoc.iter.count2(aoc.iter.map(io.lines(filename), f), aoc.id)
 end
 
 aoc.verify(solve, "input", 421, 476)

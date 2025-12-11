@@ -1,11 +1,9 @@
 local aoc = require("aoc")
 
--- FIXME: does not work with LuaJIT
-
 ---@type solver
 local function solve (filename)
 	local mat = aoc.parse_number_mat(aoc.read_file(filename), "\n", " ")
-	local tmat = aoc.transpose_view(mat)
+	local tmat = aoc.matrix.transpose_view(mat)
 	local fst = tmat[1]
 	local freqs = aoc.make_bag(tmat[2])
 	local p2 = aoc.list.sum(fst, function(_, elt)

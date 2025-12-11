@@ -38,8 +38,8 @@ local function in_right_order(ordering, page_nos)
 	for i = 1, #page_nos do
 
 		-- for every elt in befores/afters, if it exists in page then it appears before/after i
-		local all_befores = function() return aoc.for_all(find_befores(ordering, page_nos[i]), function(before) return is_before(page_nos, i, before) end) end
-		local all_afters = function() return aoc.for_all(find_afters(ordering, page_nos[i]), function(after) return is_after(page_nos, i, after) end) end
+		local all_befores = function() return aoc.list.for_all(find_befores(ordering, page_nos[i]), function(before) return is_before(page_nos, i, before) end) end
+		local all_afters = function() return aoc.list.for_all(find_afters(ordering, page_nos[i]), function(after) return is_after(page_nos, i, after) end) end
 
 		if (not all_befores()) or (not all_afters()) then
 			return false
@@ -50,8 +50,8 @@ end
 
 -- whether a should come before b or not given an ordering
 local function compare(ordering, a, b)
-	local aft = function() return aoc.exists(find_afters(ordering, a), function (after) return after == b end) end
-	local bfr = function() return aoc.exists(find_befores(ordering, b), function (before) return before == a end) end
+	local aft = function() return aoc.list.exists(find_afters(ordering, a), function (after) return after == b end) end
+	local bfr = function() return aoc.list.exists(find_befores(ordering, b), function (before) return before == a end) end
 	return aft() or bfr()
 end
 
@@ -67,12 +67,12 @@ local function solve (filename)
 
 	local correct = aoc.list.filter(to_produce, aoc.fix(in_right_order, ordering))
 	local middles = aoc.list.map(correct, aoc.middle)
-	local p1 = aoc.sum(middles)
+	local p1 = aoc.list.sum(middles, aoc.snd(aoc.id))
 
 	local incorrect = aoc.list.filter(to_produce, function(page_nos) return not in_right_order(ordering, page_nos) end)
 	local corrected = aoc.list.map(incorrect, aoc.fix(order, ordering))
 	local middles = aoc.list.map(corrected, aoc.middle)
-	local p2 = aoc.sum(middles)
+	local p2 = aoc.list.sum(middles, aoc.snd(aoc.id))
 
 	return p1, p2
 end

@@ -3,17 +3,17 @@ local aoc = require("aoc")
 ---@type solver
 local function solve (filename)
 	local rows = aoc.parse_separated_matrix(filename, aoc.fix(aoc.eq, " "))
-	local trows = aoc.transpose_view(rows)
+	local trows = aoc.matrix.transpose_view(rows)
 
 	local s, s2 = 0, 0
 
 	for i = 1, aoc.len(trows) do
 		local col = trows[i]
-		local o = string.sub(aoc.last(col), 1, 1)
+		local o = assert(aoc.list.last(col)):sub(1, 1)
 		local op = (o == "*") and aoc.mul or aoc.add
 		local init = (o == "*") and 1 or 0
 
-		local p = aoc.foldi(aoc.list.slice(col, 1, aoc.len(col)-1), init, op)
+		local p = aoc.foldi(aoc.list.slice(col, 1, aoc.len(col)-1), init, function (acc, x, _) return op(acc, x) end)
 
 		local p2 = init
 		for j = 1, aoc.len(col[1]) do

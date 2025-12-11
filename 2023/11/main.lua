@@ -1,24 +1,12 @@
-require("aoc")
+local aoc = require("aoc")
+local transpose = aoc.matrix.transpose_view
+local map = aoc.list.map
 
-local function transpose(mat)
-	local trans = List()
-	for i = 1, #mat[1] do
-		local row = List()
-		for j = 1, #mat do
-			table.insert(row, mat[j][i])
-		end
-		table.insert(trans, row)
-	end
-	return trans
-end
-
+---@param space string[][]
 local function expand(space)
-	local expanded= List()
-	for i = 1, #space do
-		local empty = true
-		for j = 1, #space[i] do
-			if space[i][j] == "#" then empty = false end
-		end
+	local expanded = {}
+	for i = 1, aoc.len(space) do
+		local empty = aoc.list.for_all(space[i], function (x) return x ~= "#" end)
 		table.insert(expanded, space[i])
 		if empty then
 			table.insert(expanded, space[i])
@@ -33,89 +21,59 @@ local function dist(line)
 	return math.abs(b[1] - a[1]) + math.abs(b[2] - a[2])
 end
 
+---@param space string[][]
 local function find_galaxies(space)
-	local gals = List()
-	for i = 1, #space do
-		for j = 1, #space[i] do
-			if space[i][j] == "#" then table.insert(gals, {i, j}) end
-		end
-	end
-	return gals
+	return aoc.iter.collect_many(aoc.iter.filter(aoc.matrix.iter(space), function (_, _, c) return c == "#" end))
 end
 
-local function part1(f)
-	local mat = List.from_iter(io.lines(f)):map(split_chars)
-	local exp = transpose(expand(transpose(expand(mat))))
-	local gals = find_galaxies(exp)
-	return gals:pairs():map(dist):reduce(plus)
-end
-
-local function find_empty(mat)
-	local space = mat
-	local rows = List()
-	for i = 1, #space do
-		local empty = true
-		for j = 1, #space[i] do
-			if space[i][j] == "#" then empty = false end
-		end
-		table.insert(rows, empty == true)
-	end
-	space = transpose(space)
-	local cols = List()
-	for i = 1, #space do
-		local empty = true
-		for j = 1, #space[i] do
-			if space[i][j] == "#" then empty = false end
-		end
-		table.insert(cols, empty == true)
-	end
+---@param space string[][]
+---@return { row: boolean[], cols: boolean[] }
+local function find_empty(space)
+	local rows = map(space, function (s)
+		return aoc.list.for_all(s, function (x) return x ~= "#" end)
+	end)
+	local cols = map(aoc.matrix.transpose_view(space), function (s)
+		return aoc.list.for_all(s, function (x) return x ~= "#" end)
+	end)
 	return { rows = rows, cols = cols }
 end
 
-local function expand2(space, gals, empty, rate)
-	local row_exp = {}
-	do
-		local add = 0
-		for i = 1, #space do
-			if empty.rows[i] then
-				add = add + rate - 1
-			end
-			row_exp[i] = add
-		end
-	end
+local function expand2(gals, empty, rate)
+	local row_exp = aoc.list.reductions(map(empty.rows, aoc.b2i), function (acc, s)
+		return acc + s * (rate - 1)
+	end)
+	local col_exp = aoc.list.reductions(map(empty.cols, aoc.b2i), function (acc, s)
+		return acc + s * (rate - 1)
+	end)
 
-	local col_exp = {}
-	do
-		local add = 0
-		for i = 1, #space[1] do
-			if empty.cols[i] then
-				add = add + rate - 1
-			end
-			col_exp[i] = add
-		end
-	end
-
-	return gals:map(
-		function(gal)
-			return {
-				gal[1] + row_exp[gal[1]],
-				gal[2] + col_exp[gal[2]]
-			}
-		end
-	)
+	return map(gals, function(gal)
+		return {
+			gal[1] + row_exp[gal[1]],
+			gal[2] + col_exp[gal[2]]
+		}
+	end)
 end
 
-local function part2(rate, f)
-	local mat = List.from_iter(io.lines(f)):map(split_chars)
+local function part1(mat)
+	local exp = transpose(expand(transpose(expand(mat))))
+	local gals = find_galaxies(exp)
+	return aoc.list.sum(aoc.list.pairs(gals), aoc.snd(dist))
+end
+
+---@param rate integer
+---@param mat string[][]
+---@return integer
+local function part2(rate, mat)
 	local empty = find_empty(mat)
 	local gals = find_galaxies(mat)
-	local exp = expand2(mat, gals, empty, rate)
-	return exp:pairs():map(dist):reduce(plus)
+	local exp = expand2(gals, empty, rate)
+	return aoc.list.sum(aoc.list.pairs(exp), aoc.snd(dist))
 end
 
-test({
-	{ func = part1, input = "example", output = 374 },
-	{ func = part1, input = "input", output = 9609130 },
-	{ func = fix2(part2, 100), input = "example", output = 8410 },
-	{ func = fix2(part2, 1000000), input = "input", output = 702152204842 },
-})
+local function solve (rate, filename)
+	local mat = aoc.parse_char_mat(aoc.read_file(filename))
+	return part1(mat), part2(rate, mat)
+end
+
+aoc.verify(aoc.fix(solve, 100), "example", 374, 8410)
+aoc.verify(aoc.fix(solve, 1000000), "input", 9609130, 702152204842)

@@ -49,9 +49,9 @@ local function solve (filename)
 		return i and tonumber(i .. (aoc.iter.last(it) or i)) or 0
 	end
 
-	return aoc.iter.unzip2_sum(io.lines(filename), function (line)
+	return aoc.iter.sum2(aoc.iter.map(io.lines(filename), function (line)
 		return g(string.gmatch(line, "%d")), g(digit_words_and_chars(line))
-	end)
+	end))
 end
 
 aoc.verify(solve, "ex1", 142, 142)

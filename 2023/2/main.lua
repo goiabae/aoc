@@ -42,9 +42,9 @@ end
 
 ---@type solver
 local function solve (filename)
-	return aoc.iter.unzip2_sum(aoc.iter.map(io.lines(filename), parse), function (game)
+	return aoc.iter.sum2(aoc.iter.map(aoc.iter.map(io.lines(filename), parse), function (game)
 		return aoc.b2i(is_valid(game)) * game.id, game.red * game.blue * game.green
-	end)
+	end))
 end
 
 aoc.verify(solve, "example", 8, 2286)
