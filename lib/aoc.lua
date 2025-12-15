@@ -543,7 +543,7 @@ end
 ---@param str string
 ---@param sep string
 ---@param f? fun (x: string): T
----@return T
+---@return T[]
 function aoc.split_with(str, sep, f)
 	local tokens = {}
 	for token in string.gmatch(str, "[^" .. sep .. "]+") do
@@ -890,6 +890,21 @@ function iter.last (it)
 		end
 		v = w
 	end
+end
+
+---@generic T...
+---@param it iterator<T...>
+---@return T...?
+function iter.first (it)
+	local function f (...)
+		local a = ...
+		if a then
+			return ...
+		else
+			return nil
+		end
+	end
+	return f(it())
 end
 
 ---@generic T, U
@@ -1511,8 +1526,8 @@ end
 
 ---@param solver solver
 ---@param filename string
----@param e1 integer
----@param e2 integer
+---@param e1 integer?
+---@param e2 integer?
 function aoc.verify(solver, filename, e1, e2)
 	local p1, p2 = solver(filename)
 	if e1 and p1 ~= e1 then
