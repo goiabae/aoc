@@ -19,9 +19,8 @@ function graph:make_node(x)
 end
 
 function graph:connect(x, y)
-	local nx = self.nodes[x] or self:make_node(x) ---@type node<string>
-	local ny = self.nodes[y] or self:make_node(y) ---@type node<string>
-
+	local nx = self.nodes[x] or self:make_node(x)
+	local ny = self.nodes[y] or self:make_node(y)
 	ny.neighbours[x] = nx
 	nx.neighbours[y] = ny
 end
@@ -67,6 +66,75 @@ function graph:components()
 	end
 end
 
+---@class min_heap
+---@field elements [string, string, number][]
+---@field size integer
+---@field cmp fun (x: [string, string, number], y: [string, string, number]): boolean
+---@field count integer
+local min_heap = {}
+min_heap.__index = min_heap
+
+---@param cmp? fun (x: point, y: point): boolean
+---@return min_heap
+function min_heap.make(count, cmp)
+	return setmetatable({ elements = {}, size = 0, count = count, cmp = cmp or aoc.less_than }, min_heap)
+end
+
+function min_heap:push(x)
+	local size = aoc.len(self.elements)
+
+	if size < self.count then
+		local i = size
+		self.elements[i + 1] = x
+
+		while i > 0 do
+			local p = math.floor((i - 1) / 2)
+			if not self.cmp(self.elements[p + 1], self.elements[i + 1]) then
+				break
+			end
+			self.elements[p + 1], self.elements[i + 1] =
+				self.elements[i + 1], self.elements[p + 1]
+			i = p
+		end
+
+		return
+	end
+
+	if not self.cmp(self.elements[1], x) then
+		self.elements[1] = x
+		self:heapify_down(0)
+	end
+end
+
+function min_heap:heapify_down(i)
+	local size = aoc.len(self.elements)
+
+	while true do
+		local left  = 2*i + 1
+		local right = 2*i + 2
+		local smallest = i
+
+		if left < size and not self.cmp(self.elements[left + 1],
+                                    self.elements[smallest + 1]) then
+			smallest = left
+		end
+
+		if right < size and not self.cmp(self.elements[right + 1],
+                                     self.elements[smallest + 1]) then
+			smallest = right
+		end
+
+		if smallest == i then
+			break
+		end
+
+		self.elements[i + 1], self.elements[smallest + 1] =
+			self.elements[smallest + 1], self.elements[i + 1]
+
+		i = smallest
+	end
+end
+
 ---@alias point [integer, integer, integer]
 
 ---@param str string
@@ -85,72 +153,85 @@ local function dist (p1, p2)
 	return math.sqrt(a*a + b*b + c*c)
 end
 
+local function part1 (count, h)
+	local s = 1
+	local g = graph.make()
+	for i = 1, count do
+		local a = h.elements[i][1]
+		local b = h.elements[i][2]
+		g:connect(a, b)
+	end
+	local cs = g:components()
+	table.sort(cs, function (x, y) return aoc.len(x) > aoc.len(y) end)
+	for i = 1, 3 do
+		local c = cs[i]
+		s = s * aoc.len(c)
+	end
+	return s
+end
+
+local function map_is_empty (xm)
+	for _, _ in pairs(xm) do
+		return false
+	end
+	return true
+end
+
+local function part2 (junctions, box_strings)
+	local g = graph.make()
+
+	local unjoined = {}
+
+	for _, b in pairs(box_strings) do
+		unjoined[b] = true
+	end
+
+	do
+		local a, b = junctions[1][1], junctions[1][2]
+		g:connect(a, b)
+		unjoined[a] = nil
+		unjoined[b] = nil
+	end
+
+	while true do
+		for _, j in ipairs(junctions) do
+			local a, b = j[1], j[2]
+			if not (unjoined[a] and unjoined[b]) and (unjoined[a] or unjoined[b]) then
+				g:connect(a, b)
+				unjoined[a] = nil
+				unjoined[b] = nil
+				if map_is_empty(unjoined) then
+					return parse_point(a)[1] * parse_point(b)[1]
+				end
+				break
+			end
+		end
+	end
+end
+
 local function solve (count, filename)
 	local box_strings = aoc.collect(io.lines(filename))
-
-	---@type [string, string, integer][]
 	local junctions = {}
+	local h = min_heap.make(count, function (x, y) return x[3] < y[3] end)
 
 	for i = 1, aoc.len(box_strings) do
 		local s1 = box_strings[i]
 		for j = i+1, aoc.len(box_strings) do
 			local s2 = box_strings[j]
-			if s1 ~= s2 then
-				local p1 = parse_point(s1)
-				local p2 = parse_point(s2)
-				local d = dist(p1, p2)
-				table.insert(junctions, { s1, s2, d })
-			end
+			local p1 = parse_point(s1)
+			local p2 = parse_point(s2)
+			local d = dist(p1, p2)
+
+			h:push({ s1, s2, d })
+
+			table.insert(junctions, { s1, s2, d })
 		end
 	end
 
-	aoc.sort(junctions, function (x, y) return x[3] < y[3] end)
+	table.sort(junctions, function (x, y) return x[3] < y[3] end)
 
-	local s = 1
-	do
-		local g = graph.make()
-		for i = 1, count do
-			local a = junctions[i][1]
-			local b = junctions[i][2]
-			local d = junctions[i][3]
-			g:connect(a, b)
-		end
-		local cs = g:components()
-		table.sort(cs, function (x, y) return aoc.len(x) > aoc.len(y) end)
-		for i = 1, 3 do
-			local c = cs[i]
-			s = s * aoc.len(c)
-		end
-	end
-
-	local s2 = 1
-	do
-		local joined = {}
-		local g = graph.make()
-		g:connect(junctions[1][1], junctions[1][2])
-		joined[junctions[1][1]] = true
-		joined[junctions[1][2]] = true
-		while true do
-			if aoc.list.for_all(box_strings, function (boxd) return joined[boxd] == true end) then
-				break
-			end
-			for i = 2, aoc.len(junctions) do
-				local junc = junctions[i]
-				local a = junc[1]
-				local b = junc[2]
-				if not (joined[a] and joined[b]) and (joined[a] or joined[b]) then
-					g:connect(a, b)
-					joined[a] = true
-					joined[b] = true
-					if aoc.list.for_all(box_strings, function (boxd) return joined[boxd] == true end) then
-						s2 = parse_point(a)[1] * parse_point(b)[1]
-						break
-					end
-					break
-				end
-			end
-		end
-	end
+	local s = part1(count, h)
+	local s2 = part2(junctions, box_strings)
 
 	return s, s2
 end
