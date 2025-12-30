@@ -380,6 +380,11 @@ function list.iter(seq)
 	end
 end
 
+function list.sorted(xs)
+	aoc.sort(xs)
+	return xs
+end
+
 ---@generic K, V
 ---@param xm table<K, V>
 ---@return iterator<K, V>
@@ -442,7 +447,7 @@ end
 
 ---@generic T
 ---@param seq T[]
----@param cmp fun (x: T, y: T): boolean
+---@param cmp? fun (x: T, y: T): boolean
 ---@return T[]
 function aoc.sort(seq, cmp)
 	cmp = cmp or aoc.less_than
@@ -527,6 +532,19 @@ end
 function list.find(seq, elt)
 	for i = 1, aoc.len(seq) do
 		if seq[i] == elt then
+			return i
+		end
+	end
+	return nil
+end
+
+---@generic T
+---@param seq T[]
+---@param pred fun (i: integer, x: T): boolean
+---@return integer?
+function list.find_where(seq, pred)
+	for i = 1, aoc.len(seq) do
+		if pred(i, seq[i]) then
 			return i
 		end
 	end
